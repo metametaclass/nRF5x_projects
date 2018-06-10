@@ -88,6 +88,7 @@ INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_slave
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/timer
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/twi_master
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/tws_slave
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/radio_config
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/uart
 INC_PATHS += -I$(SDK_PATH)/components/libraries/bootloader
 INC_PATHS += -I$(SDK_PATH)/components/libraries/bootloader/ble_dfu
@@ -200,6 +201,7 @@ vpath %.c $(SDK_PATH)/components/drivers_nrf/spi_slave
 vpath %.c $(SDK_PATH)/components/drivers_nrf/timer
 vpath %.c $(SDK_PATH)/components/drivers_nrf/twi_master
 vpath %.c $(SDK_PATH)/components/drivers_nrf/twis_slave
+vpath %.c $(SDK_PATH)/components/drivers_nrf/radio_config
 vpath %.c $(SDK_PATH)/components/drivers_nrf/uart
 vpath %.c $(SDK_PATH)/components/libraries/bootloader
 vpath %.c $(SDK_PATH)/components/libraries/bootloader/ble_dfu
