@@ -4,7 +4,7 @@ TEMPLATEROOT = ..
 
 CFLAGS  += -O0 -g
 CFLAGS  += -DNRF51822
-CFLAGS  += -DBOARD_CUSTOM
+CFLAGS  += -DBOARD_BLE_TEST
 
 ASFLAGS += -g 
 
@@ -15,7 +15,8 @@ LDSCRIPT = $(TEMPLATEROOT)/blank_nrf51822_QFAA.ld
 
 OBJS =  main.o 
 OBJS += system_nrf51.o
-OBJS += app_timer.o app_error.o app_error_weak.o app_util_platform.o 
+OBJS += app_timer.o app_error.o app_error_weak.o app_util_platform.o
+OBJS += app_button.o nrf_drv_gpiote.o
 OBJS += nrf_log_frontend.o nrf_log_backend_serial.o
 OBJS += nrf_drv_uart.o nrf_drv_common.o
 OBJS += radio_config.o

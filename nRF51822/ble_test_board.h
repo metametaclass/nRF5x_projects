@@ -25,6 +25,8 @@
 
 #define LEDS_LIST { LED_1, LED_2, LED_3, LED_4, LED_5 }
 
+#define LEDS_ACTIVE_STATE 1
+
 #define BSP_LED_0      LED_1
 #define BSP_LED_1      LED_2
 #define BSP_LED_2      LED_3
@@ -63,6 +65,7 @@
 #define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
 #define BSP_BUTTON_3_MASK (1<<BSP_BUTTON_3)
 
+#define BUTTONS_ACTIVE_STATE 0
 //#define BUTTONS_MASK   0x001E0000
 
 #define RX_PIN_NUMBER  11  // -> CPTX
