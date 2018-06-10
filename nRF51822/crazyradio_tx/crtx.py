@@ -29,6 +29,7 @@ USB driver for the Crazyradio USB dongle.
 """
 import logging
 import os
+import traceback
 
 import usb
 
@@ -95,6 +96,20 @@ class _radio_ack:
     retry = 0
     data = ()
 
+# nordic\nRF5_SDK_12.3.0\components\drivers_nrf\radio_config\radio_config.c
+# * @verbatim
+# * uint8_t tx_address[5] = { 0xC0, 0x01, 0x23, 0x45, 0x67 };
+# * hal_nrf_set_rf_channel(7);
+# * hal_nrf_set_address_width(HAL_NRF_AW_5BYTES);
+# * hal_nrf_set_address(HAL_NRF_TX, tx_address);
+# * hal_nrf_set_address(HAL_NRF_PIPE0, tx_address);
+# * hal_nrf_open_pipe(0, false);
+# * hal_nrf_set_datarate(HAL_NRF_1MBPS);
+# * hal_nrf_set_crc_mode(HAL_NRF_CRC_16BIT);
+# * hal_nrf_setup_dynamic_payload(0xFF);
+# * hal_nrf_enable_dynamic_payload(false);
+# * @endverbatim
+
 
 class Crazyradio:
     """ Used for communication with the Crazyradio USB dongle """
@@ -144,16 +159,16 @@ class Crazyradio:
             logger.warning('You should update to Crazyradio firmware V0.4+')
 
         # Reset the dongle to power up settings
-        self.set_data_rate(self.DR_2MPS)
-        self.set_channel(2)
+        self.set_data_rate(self.DR_1MPS)
+        self.set_channel(7)
         self.arc = -1
-        if self.version >= 0.4:
-            self.set_cont_carrier(False)
-            self.set_address((0xE7,) * 5)
-            self.set_power(self.P_0DBM)
-            self.set_arc(3)
-            self.set_ard_bytes(32)
-            self.set_ack_enable(True)
+        self.set_cont_carrier(False)
+        self.set_address((0xC0, 0x01, 0x23, 0x45, 0x67))
+        self.set_power(self.P_0DBM)
+        #self.set_arc(3)
+        #self.set_ard_bytes(32)
+        #self.set_ack_enable(True)
+        self.set_ack_enable(False)
 
     def close(self):
         if (pyusb1 is False):
@@ -283,7 +298,9 @@ class Crazyradio:
             else:
                 self.handle.write(endpoint=1, data=dataOut, timeout=1000)
                 data = self.handle.read(0x81, 64, timeout=1000)
-        except usb.USBError:
+        except usb.USBError as e:
+            tb = traceback.format_exc()
+            logger.error("error: %s %s", e, tb)
             pass
 
         if data is not None:
