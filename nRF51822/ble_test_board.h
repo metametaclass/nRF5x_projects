@@ -37,7 +37,7 @@
 #define BSP_LED_3_MASK (1<<BSP_LED_3)
 #define BSP_LED_4_MASK (1<<BSP_LED_4)
 
-#define LEDS_MASK      (BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK | BSP_LED_3_MASK| BSP_LED_4_MASK)
+//#define LEDS_MASK      (BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK | BSP_LED_3_MASK| BSP_LED_4_MASK)
 /* all LEDs are lit when GPIO is low */
 #define LEDS_INV_MASK  ~LEDS_MASK
 
@@ -63,7 +63,7 @@
 #define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
 #define BSP_BUTTON_3_MASK (1<<BSP_BUTTON_3)
 
-#define BUTTONS_MASK   0x001E0000
+//#define BUTTONS_MASK   0x001E0000
 
 #define RX_PIN_NUMBER  11  // -> CPTX
 #define TX_PIN_NUMBER  9   // -> CPRX

@@ -17,8 +17,9 @@
 #include <stdlib.h>
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
+#include "boards.h"
 
-const uint32_t led_pin1 = 7;
+const uint32_t led_pin1 = BSP_LED_0;
 
 /**
  * @brief Function for application main entry.
