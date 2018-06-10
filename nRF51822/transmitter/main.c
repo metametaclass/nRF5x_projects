@@ -200,8 +200,9 @@ int main(void)
     APP_ERROR_CHECK(err_code);
 
     NRF_LOG_INFO("Press Any Button\r\n");
+    NRF_LOG_FLUSH();
 
-    /*while (true)
+    while (true)
     {
         if (packet != 0)
         {
@@ -211,12 +212,6 @@ int main(void)
         }
         NRF_LOG_FLUSH();
         __WFE();
-    }*/
-    while (true) {
-
-      __WFE();
-      __SEV();
-      __WFE();
     }
 }
 
