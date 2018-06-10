@@ -1,10 +1,11 @@
 TEMPLATEROOT = ..
 
-# compilation flags for gdb
+BOARD ?= BOARD_CUSTOM
 
+# compilation flags for gdb
 CFLAGS  += -O0 -g
 CFLAGS  += -DNRF51822
-CFLAGS  += -DBOARD_BLE_TEST
+CFLAGS  += -D$(BOARD)
 
 ASFLAGS += -g 
 

@@ -1,9 +1,10 @@
 TEMPLATEROOT = ..
 
-# compilation flags for gdb
+BOARD ?= BOARD_CUSTOM
 
+# compilation flags for gdb
 CFLAGS  += -O0 -g
-CFLAGS += -DBOARD_CUSTOM
+CFLAGS += -D$(BOARD)
 CFLAGS += -DNRF51822
 CFLAGS += -DNRF_LOG_USES_UART=1
 CFLAGS += -DSOFTDEVICE_PRESENT
