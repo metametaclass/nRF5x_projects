@@ -56,7 +56,15 @@ BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY))
 #assembly files common to all targets
 OBJS += gcc_startup_nrf51.o
 
-OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(OBJS) )
+#add source dirs to vpath
+SOURCE_DIRS = $(sort $(dir $(OBJS)))
+vpath %.c $(SOURCE_DIRS)
+
+#put all *.o files to OBJECT_DIRECTORY
+OBJ_NAMES = $(notdir $(OBJS))
+
+OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(OBJ_NAMES) )
+
 
 
 #flags common to all targets
@@ -98,10 +106,16 @@ bin: $(OUTPUT_BINARY_DIRECTORY)/$(BIN)
 
 #target for printing all targets
 help:
-	@echo following targets are available:
-	@echo 	$(OUTPUT_FILENAME)
-	@echo 	$(TEMPLATEROOT)
-	@echo 	$(SDK_PATH)
+	@echo parameters:
+	@echo output:	$(OUTPUT_FILENAME)
+	@echo root:	$(TEMPLATEROOT)
+	@echo sdk:	$(SDK_PATH)
+	@echo nosdk:	$(NOSDK_PATH)
+	@echo include dirs:	$(INC_PATHS)
+	@echo source dirs:	$(SOURCE_DIRS)
+	@echo obj:	$(OBJS)
+	@echo objects:	$(OBJECTS)
+
 
 
 ## Create build directories

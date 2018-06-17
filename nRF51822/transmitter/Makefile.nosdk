@@ -1,0 +1,45 @@
+TEMPLATEROOT = ..
+
+BOARD ?= BOARD_CUSTOM
+
+# compilation flags for gdb
+CFLAGS  += -O0 -g
+CFLAGS  += -DNRF51822
+CFLAGS  += -D$(BOARD)
+
+ASFLAGS += -g 
+
+LDSCRIPT = $(TEMPLATEROOT)/blank_nrf51822_QFAA.ld
+
+
+#use only necessary includes and source files
+
+# object files
+
+OBJS =  main.o system_nrf51.o
+OBJS += $(NOSDK_PATH)/libraries/timer/app_timer.o 
+OBJS += $(NOSDK_PATH)/libraries/util/app_error.o $(NOSDK_PATH)/libraries/util/app_error_weak.o $(NOSDK_PATH)/libraries/util/app_util_platform.o
+OBJS += $(NOSDK_PATH)/libraries/button/app_button.o 
+OBJS += $(NOSDK_PATH)/drivers_nrf/gpiote/nrf_drv_gpiote.o
+OBJS += $(NOSDK_PATH)/drivers_nrf/common/nrf_drv_common.o
+OBJS += $(NOSDK_PATH)/libraries/log/src/nrf_log_frontend.o $(NOSDK_PATH)/libraries/log/src/nrf_log_backend_serial.o
+OBJS += $(NOSDK_PATH)/drivers_nrf/uart/nrf_drv_uart.o 
+OBJS += $(NOSDK_PATH)/drivers_nrf/radio_config/radio_config.o
+OBJS += $(NOSDK_PATH)/libraries/bsp/bsp.o $(NOSDK_PATH)/boards/boards.o
+# include common make file
+
+# include common make file
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/delay
+INC_PATHS += -I$(NOSDK_PATH)/boards
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/radio_config
+INC_PATHS += -I$(NOSDK_PATH)/libraries/timer
+INC_PATHS += -I$(NOSDK_PATH)/libraries/bsp
+INC_PATHS += -I$(NOSDK_PATH)/libraries/button
+INC_PATHS += -I$(NOSDK_PATH)/libraries/log
+INC_PATHS += -I$(NOSDK_PATH)/libraries/log/src
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/gpiote
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/common
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/uart
+
+include $(TEMPLATEROOT)/Makefile.nosdk
+

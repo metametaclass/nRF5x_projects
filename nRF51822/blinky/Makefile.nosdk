@@ -7,16 +7,17 @@ SIMPLE_BLINK ?= 0
 # compilation flags for gdb
 CFLAGS  += -O0 -g
 CFLAGS  += -DNRF51822
-CFLAGS  += -D$(BOARD) -DSIMPLE_BLINK=$(SIMPLEBLINK)
+CFLAGS  += -D$(BOARD) -DSIMPLE_BLINK=$(SIMPLE_BLINK)
 ASFLAGS += -g 
 
 LDSCRIPT = $(TEMPLATEROOT)/blank_nrf51822_QFAA.ld
 
 # object files
 
-OBJS =  system_nrf51.o blinky.o boards.o
-#OBJS += nrf_delay.o
+OBJS =  system_nrf51.o blinky.o $(NOSDK_PATH)/boards/boards.o
 
 # include common make file
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/delay
+INC_PATHS += -I$(NOSDK_PATH)/boards
 
-include $(TEMPLATEROOT)/Makefile.sdk123
+include $(TEMPLATEROOT)/Makefile.nosdk

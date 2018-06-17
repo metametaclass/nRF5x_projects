@@ -19,6 +19,12 @@
 #include "nrf_gpio.h"
 #include "boards.h"
 
+
+#if SIMPLE_BLINK==0
+#undef SIMPLE_BLINK
+#endif
+
+
 const uint32_t led_pin1 = BSP_LED_0;
 
 /**
@@ -26,6 +32,9 @@ const uint32_t led_pin1 = BSP_LED_0;
  */
 int main(void) {
 
+
+#ifdef SIMPLE_BLINK
+    //simple blink with direct pin configuration
     // setup
     // Configure LED-pin as outputs and clear.
     nrf_gpio_cfg_output(led_pin1);
@@ -37,7 +46,26 @@ int main(void) {
         nrf_gpio_pin_toggle(led_pin1);
         nrf_delay_ms(500);
     }
+#else
+
+    //nordic example with boards/bsp configuration
+
+    /* Configure board. */
+    bsp_board_leds_init();
+
+    /* Toggle LEDs. */
+    while (true)
+    {
+        for (int i = 0; i < LEDS_NUMBER; i++)
+        {
+            bsp_board_led_invert(i);
+            nrf_delay_ms(500);
+        }
+    }
+
+#endif
 }
+
 
 
 /** @} */
