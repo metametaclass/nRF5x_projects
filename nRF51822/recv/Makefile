@@ -24,4 +24,4 @@ OBJS += radio_config.o
 OBJS += bsp.o boards.o
 # include common make file
 
-include $(TEMPLATEROOT)/Makefile.common
+include $(TEMPLATEROOT)/Makefile.sdk123
