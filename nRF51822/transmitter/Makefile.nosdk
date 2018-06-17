@@ -26,9 +26,8 @@ OBJS += $(NOSDK_PATH)/libraries/log/src/nrf_log_frontend.o $(NOSDK_PATH)/librari
 OBJS += $(NOSDK_PATH)/drivers_nrf/uart/nrf_drv_uart.o 
 OBJS += $(NOSDK_PATH)/drivers_nrf/radio_config/radio_config.o
 OBJS += $(NOSDK_PATH)/libraries/bsp/bsp.o $(NOSDK_PATH)/boards/boards.o
-# include common make file
 
-# include common make file
+# includes
 INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/delay
 INC_PATHS += -I$(NOSDK_PATH)/boards
 INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/radio_config
@@ -41,5 +40,6 @@ INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/gpiote
 INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/common
 INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/uart
 
+# include common make file
 include $(TEMPLATEROOT)/Makefile.nosdk
 

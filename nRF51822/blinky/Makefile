@@ -18,5 +18,4 @@ OBJS =  system_nrf51.o blinky.o boards.o
 #OBJS += nrf_delay.o
 
 # include common make file
-
 include $(TEMPLATEROOT)/Makefile.sdk123

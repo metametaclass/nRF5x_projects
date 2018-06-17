@@ -22,6 +22,6 @@ OBJS += nrf_log_frontend.o nrf_log_backend_serial.o
 OBJS += nrf_drv_uart.o nrf_drv_common.o
 OBJS += radio_config.o
 OBJS += bsp.o boards.o
-# include common make file
 
+# include common make file
 include $(TEMPLATEROOT)/Makefile.sdk123
