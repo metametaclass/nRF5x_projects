@@ -17,4 +17,4 @@ OBJS =  system_nrf51.o blinky.o
 
 # include common make file
 
-include $(TEMPLATEROOT)/Makefile.common
+include $(TEMPLATEROOT)/Makefile.sdk123

@@ -16,4 +16,5 @@ LDSCRIPT = $(TEMPLATEROOT)/blank_nrf51822_QFAA.ld
 
 OBJS =  main.o esb.o systick.o pm.o system_nrf51.o
 
-include $(TEMPLATEROOT)/Makefile.common
+include $(TEMPLATEROOT)/Makefile.nosdk
+

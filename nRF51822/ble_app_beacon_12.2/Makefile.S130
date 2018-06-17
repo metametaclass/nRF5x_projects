@@ -39,4 +39,4 @@ OBJS += ble_advdata.o ble_conn_params.o ble_srv_common.o
 OBJS += system_nrf51.o softdevice_handler.o
 # include common make file
 
-include $(TEMPLATEROOT)/Makefile.common
+include $(TEMPLATEROOT)/Makefile.sdk123

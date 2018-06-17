@@ -1,0 +1,32 @@
+#stripped down to bare necessities makefile
+
+#compiler, includes and sources
+
+#GNU_INSTALL_ROOT=$(HOME)/nordic/gcc-arm-none-eabi-5_3-2016q1/
+#GNU_INSTALL_ROOT=
+#GNU_INSTALL_ROOT_BIN=$(GNU_INSTALL_ROOT)/bin/
+#GNU_PREFIX=arm-none-eabi
+
+#SDK_PATH=$(TEMPLATEROOT)/../nordic/nRF5_SDK_12.3.0
+NOSDK_PATH=$(TEMPLATEROOT)/../nordic/nRF5_SDK_12.3.0/components
+#NOSDK_PATH=$(TEMPLATEROOT)/../nosdk
+TEMPLATE_PATH=$(NOSDK_PATH)/toolchain/gcc
+#S130_HEX_FILE=$(SDK_PATH)/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex
+
+
+#includes common to all targets
+INC_PATHS += -I$(NOSDK_PATH)/device
+INC_PATHS += -I$(NOSDK_PATH)/toolchain
+INC_PATHS += -I$(NOSDK_PATH)/toolchain/cmsis/include
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/hal
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/nrf_soc_nosd
+INC_PATHS += -I$(NOSDK_PATH)/libraries/util
+
+#object sources common to all targets
+
+vpath %.c $(NOSDK_PATH)/toolchain/
+vpath %.c $(NOSDK_PATH)/toolchain/gcc
+vpath %.s $(NOSDK_PATH)/toolchain/gcc
+vpath %.S $(NOSDK_PATH)/toolchain/gcc
+
+include $(TEMPLATEROOT)/Makefile.common
