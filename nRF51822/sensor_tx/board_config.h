@@ -1,0 +1,7 @@
+#ifndef BOARD_CONFIG_H
+#define BOARD_CONFIG_H
+
+#define BOARD_CONFIG_LED_PIN_0 18
+#define BOARD_CONFIG_LED_PIN_1 19
+
+#endif

@@ -15,8 +15,11 @@ LDSCRIPT = $(TEMPLATEROOT)/blank_nrf51822_QFAA.ld
 #use only necessary includes and source files
 
 # object files
+OBJS =  main.o system_nrf51.o $(NOSDK_PATH)/drivers_nrf/common/nrf_drv_common.o
 
-OBJS =  main.o system_nrf51.o
+# use delay
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/delay
+INC_PATHS += -I$(NOSDK_PATH)/drivers_nrf/common
 
 # include common make file
 include $(TEMPLATEROOT)/Makefile.nosdk
