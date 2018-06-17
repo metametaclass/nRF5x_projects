@@ -12,54 +12,58 @@
 #ifndef BLE_TEST_BOARD_H
 #define BLE_TEST_BOARD_H
 
-#define LEDS_NUMBER    1
+// LEDs definitions for PCA10028
+#define LEDS_NUMBER    5
 
-#define LED_START      7
-#define LED_1          7
-#define LED_STOP       7
+#define LED_START      18
+#define LED_1          18
+#define LED_2          19
+#define LED_3          20
+#define LED_4          21
+#define LED_5          22
+#define LED_STOP       22
 
-#define LEDS_LIST { LED_1}
+#define LEDS_LIST { LED_1, LED_2, LED_3, LED_4, LED_5 }
 
-#define LEDS_ACTIVE_STATE 0
+#define LEDS_ACTIVE_STATE 1
 
 #define BSP_LED_0      LED_1
-//#define BSP_LED_1      LED_2
-//#define BSP_LED_2      LED_3
-//#define BSP_LED_3      LED_4
-//#define BSP_LED_4      LED_5
+#define BSP_LED_1      LED_2
+#define BSP_LED_2      LED_3
+#define BSP_LED_3      LED_4
+#define BSP_LED_4      LED_5
 
 #define BSP_LED_0_MASK (1<<BSP_LED_0)
-//#define BSP_LED_1_MASK (1<<BSP_LED_1)
-//#define BSP_LED_2_MASK (1<<BSP_LED_2)
-//#define BSP_LED_3_MASK (1<<BSP_LED_3)
-//#define BSP_LED_4_MASK (1<<BSP_LED_4)
+#define BSP_LED_1_MASK (1<<BSP_LED_1)
+#define BSP_LED_2_MASK (1<<BSP_LED_2)
+#define BSP_LED_3_MASK (1<<BSP_LED_3)
+#define BSP_LED_4_MASK (1<<BSP_LED_4)
 
 //#define LEDS_MASK      (BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK | BSP_LED_3_MASK| BSP_LED_4_MASK)
-//#define LEDS_MASK      (BSP_LED_0_MASK)
 /* all LEDs are lit when GPIO is low */
-//#define LEDS_INV_MASK  ~LEDS_MASK
+#define LEDS_INV_MASK  ~LEDS_MASK
 
-#define BUTTONS_NUMBER 0
+#define BUTTONS_NUMBER 2
 
 #define BUTTON_START   16
 #define BUTTON_1       16
 #define BUTTON_2       17
-#define BUTTON_3       17
-#define BUTTON_4       17
+//#define BUTTON_3       17
+//#define BUTTON_4       17
 #define BUTTON_STOP    17
 #define BUTTON_PULL    NRF_GPIO_PIN_PULLUP
 
-#define BUTTONS_LIST { BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4 }
+#define BUTTONS_LIST { BUTTON_1, BUTTON_2 } //, BUTTON_3, BUTTON_4
 
 #define BSP_BUTTON_0   BUTTON_1
 #define BSP_BUTTON_1   BUTTON_2
-#define BSP_BUTTON_2   BUTTON_3
-#define BSP_BUTTON_3   BUTTON_4
+//#define BSP_BUTTON_2   BUTTON_3
+//#define BSP_BUTTON_3   BUTTON_4
 
 #define BSP_BUTTON_0_MASK (1<<BSP_BUTTON_0)
 #define BSP_BUTTON_1_MASK (1<<BSP_BUTTON_1)
-#define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
-#define BSP_BUTTON_3_MASK (1<<BSP_BUTTON_3)
+//#define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
+//#define BSP_BUTTON_3_MASK (1<<BSP_BUTTON_3)
 
 #define BUTTONS_ACTIVE_STATE 0
 //#define BUTTONS_MASK   0x001E0000
@@ -86,7 +90,6 @@
 #define SPIM1_MISO_PIN      14     /**< SPI Master In Slave Out GPIO pin number. */
 #define SPIM1_SS_PIN        13     /**< SPI Slave Select GPIO pin number. */
 
-#ifdef USE_SERIALIZATION_BOARD
 // serialization APPLICATION board
 #define SER_CONN_CHIP_RESET_PIN     30    // Pin used to reset connectivity chip
 
@@ -115,12 +118,10 @@
 #define SER_CON_SPIS_CSN_PIN        12    // SPI CSN signal.
 #define SER_CON_SPIS_RDY_PIN        14    // SPI READY GPIO pin number.
 #define SER_CON_SPIS_REQ_PIN        13    // SPI REQUEST GPIO pin number.
-#endif // USE_SERIALIZATION_BOARD
 
 // Arduino board mappings
-#ifdef USE_ARDUINO_MAPPINGS
-#define ARDUINO_SCL_PIN             15    // SCL signal pin
-#define ARDUINO_SDA_PIN             16    // SDA signal pin
+#define ARDUINO_SCL_PIN             7     // SCL signal pin
+#define ARDUINO_SDA_PIN             30    // SDA signal pin
 #define ARDUINO_AREF_PIN            0     // Aref pin
 #define ARDUINO_13_PIN              29    // Digital pin 13
 #define ARDUINO_12_PIN              28    // Digital pin 12
@@ -144,8 +145,6 @@
 #define ARDUINO_A3_PIN              4     // Analog channel 3
 #define ARDUINO_A4_PIN              5     // Analog channel 4
 #define ARDUINO_A5_PIN              6     // Analog channel 5
-
-#endif //USE_ARDUINO_MAPPINGS
 
 // Low frequency clock source to be used by the SoftDevice
 /*

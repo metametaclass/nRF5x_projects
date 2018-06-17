@@ -18,7 +18,8 @@ call %~dp0msys.bat
 
 * download and unpack nRF SDK 12.3 to folder nordic\nRF5_SDK_12.3.0\
 
-* copy nRF51822\custom_board.h.example to nRF51822\custom_board.h and edit according to your nRF58122 board hardware configuration.
+* copy nRF51822\custom_board.h.example to nRF51822\custom_board.h and edit according to your nRF58122 board hardware configuration or 
+  use one of pre-defined board configurations.
 
 * connect st-link v2 to nRF51822 development board:
 ```
