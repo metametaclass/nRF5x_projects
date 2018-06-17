@@ -24,7 +24,7 @@
 
 #define RTC_PRESCALER 4095 
 #define RTC_TICK_PER_SECOND 8
-#define RTC_COMPARE_TICKS (RTC_TICK_PER_SECOND*10)
+#define RTC_COMPARE_TICKS (RTC_TICK_PER_SECOND*5)
 
 void clock_initialization()
 {
@@ -66,7 +66,7 @@ void RTC0_IRQHandler(void)
       nrf_rtc_event_pending (NRF_RTC0, NRF_RTC_EVENT_TICK)) {
     nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
   
-    nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
+    //nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
   }
   //NRF_RTC0 -> EVENTS_TICK = 0;
 
@@ -115,12 +115,12 @@ void rtc_init(){
   nrf_drv_common_irq_enable(RTC0_IRQn, 7);
   
   nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
-  //nrf_rtc_event_enable(NRF_RTC0, NRF_RTC_EVENT_TICK);
+  nrf_rtc_event_disable(NRF_RTC0, NRF_RTC_EVENT_TICK);
 
   nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
-  //nrf_rtc_event_enable(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_event_disable(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
 
-  nrf_rtc_int_enable(NRF_RTC0, NRF_RTC_INT_TICK_MASK | NRF_RTC_INT_COMPARE0_MASK); 
+  nrf_rtc_int_enable(NRF_RTC0, /*NRF_RTC_INT_TICK_MASK |*/ NRF_RTC_INT_COMPARE0_MASK); 
   nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_START);
   
 }
@@ -138,17 +138,19 @@ int main(void)
     
   nrf_gpio_pin_set(BOARD_CONFIG_LED_PIN_0);
   nrf_delay_ms(250);
-  
-  
+  nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
+    
   while (true)
   {
-    nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_1);  
+    nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
+    nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_1);
     __SEV();
     __WFE();
     __WFE();
     nrf_gpio_pin_set(BOARD_CONFIG_LED_PIN_1);
 
+
     //do some work
-    //nrf_delay_ms(10);
+    nrf_delay_ms(10);
   }
 }
