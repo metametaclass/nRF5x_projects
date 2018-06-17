@@ -1,2 +1,3 @@
 _build
 *.pyc
+nRF51822/custom_board.h
