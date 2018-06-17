@@ -2,7 +2,7 @@
 
 #compiler, includes and sources
 
-#GNU_INSTALL_ROOT=$(HOME)/nordic/gcc-arm-none-eabi-5_3-2016q1/
+#GNU_INSTALL_ROOT=$(TEMPLATEROOT)/../gcc-arm-none-eabi-5_3-2016q1/
 #GNU_INSTALL_ROOT=
 #GNU_INSTALL_ROOT_BIN=$(GNU_INSTALL_ROOT)/bin/
 #GNU_PREFIX=arm-none-eabi
