@@ -18,11 +18,7 @@ call %~dp0msys.bat
 
 * download and unpack nRF SDK 12.3 to folder nordic\nRF5_SDK_12.3.0\
 
-* change folder to example projec
-
-```
-cd nRF51822\ble_app_beacon_12.2\
-```
+* copy nRF51822\custom_board.h.example to nRF51822\custom_board.h and edit according to your nRF58122 board hardware configuration.
 
 * connect st-link v2 to nRF51822 development board:
 ```
@@ -30,6 +26,12 @@ GND - GND
 3.3v - VCC
 SWDCLK - SWDCLK
 SWDIO - SWDIO
+```
+
+* change folder to example project
+
+```
+cd nRF51822\ble_app_beacon_12.2\
 ```
 
 * build and flash program
@@ -42,6 +44,3 @@ openocd -d2 -f nRF51822/openocd.cfg -c 'init_reset halt; init; halt; nrf51 mass_
 ```
 
 * use any BLe scanner app on Android or iOS and find running beacon
-
-
-
