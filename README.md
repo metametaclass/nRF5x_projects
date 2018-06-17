@@ -38,7 +38,7 @@ cd nRF51822\ble_app_beacon_12.2\
 * build and flash program
 make flash_130
 
-* Alternatively, you may use already build hex file nRF51822\ble_app_beacon_12.2\bin\ and run openocd 
+* Or you can use prebuilt hex file nRF51822\ble_app_beacon_12.2\bin\ and run openocd 
 
 ```
 openocd -d2 -f nRF51822/openocd.cfg -c 'init_reset halt; init; halt; nrf51 mass_erase; program nordic/nRF5_SDK_12.3.0/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex verify; program nRF51822/ble_app_beacon_12.2/bin/ble_app_beacon_12.2.hex verify; reset; exit'
