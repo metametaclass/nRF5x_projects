@@ -1,3 +1,4 @@
 _build
 *.pyc
 nRF51822/custom_board.h
+nRF51822/sensor_tx/board_config.h

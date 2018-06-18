@@ -52,12 +52,30 @@ void clock_initialization()
 
 //nRF5_SDK_12.3.0\examples\peripheral\rtc\main.c
 
+void led_on(uint32_t gpio){
+#ifdef BOARD_CONFIG_LED_ACTIVE_LOW
+  nrf_gpio_pin_clear(gpio);
+#else
+  nrf_gpio_pin_set(gpio);
+#endif
+}
+
+void led_off(uint32_t gpio){
+#ifdef BOARD_CONFIG_LED_ACTIVE_LOW
+  nrf_gpio_pin_set(gpio);
+#else
+  nrf_gpio_pin_clear(gpio);
+#endif
+}
+
 void led_pin_init(){
   nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_0);
-  nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
+  led_off(BOARD_CONFIG_LED_PIN_0);
+
   nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_1);
-  nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_1);
+  led_off(BOARD_CONFIG_LED_PIN_1);
 }
+
 
 void RTC0_IRQHandler(void)
 {
@@ -81,7 +99,7 @@ void RTC0_IRQHandler(void)
     val = RTC_WRAP((val + RTC_COMPARE_TICKS));
     nrf_rtc_cc_set(NRF_RTC0, 0, val);
 
-    nrf_gpio_pin_set(BOARD_CONFIG_LED_PIN_0);
+    led_on(BOARD_CONFIG_LED_PIN_0);
   }
 
   
@@ -136,18 +154,18 @@ int main(void)
 
   rtc_init(); 
     
-  nrf_gpio_pin_set(BOARD_CONFIG_LED_PIN_0);
+  led_on(BOARD_CONFIG_LED_PIN_0);
   nrf_delay_ms(250);
-  nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
+  led_off(BOARD_CONFIG_LED_PIN_0);
     
   while (true)
   {
-    nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
-    nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_1);
+    led_off(BOARD_CONFIG_LED_PIN_0);
+    led_off(BOARD_CONFIG_LED_PIN_1);
     __SEV();
     __WFE();
     __WFE();
-    nrf_gpio_pin_set(BOARD_CONFIG_LED_PIN_1);
+    led_on(BOARD_CONFIG_LED_PIN_1);
 
 
     //do some work
