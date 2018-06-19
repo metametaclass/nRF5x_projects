@@ -12,23 +12,29 @@
 //irq enable
 #include "nrf_drv_common.h"
 
-//rtc
-#include "nrf_rtc.h"
-
 //delay
 #include "nrf_delay.h"
 
 //ppi
-//#include "nrf_ppi.h"
+#include "nrf_ppi.h"
+//events addresses
+#include "nrf_adc.h"
+#include "nrf_rtc.h"
+
 
 //hardware config
 #include "board_config.h"
 
+//rtc timer
+#include "leds.h"
+
+
+//rtc timer
+#include "rtc.h"
+
 //battery measurement
 #include "adc.h"
 
-//events address
-//#include "nrf_adc.h"
 
 //error codes
 #include "nrfs_errors.h"
@@ -36,22 +42,9 @@
 //radio transmitter
 #include "radio_tx.h"
 
-//32768/4096
-#define RTC_PRESCALER 4095 
-
-//8 ticks per second 
-#define RTC_TICK_PER_SECOND 8
-
-#ifndef BOARD_CONFIG_SEND_INTERVAL
-#define BOARD_CONFIG_SEND_INTERVAL 5
-#endif
-
-//main wake-up event interval
-#define RTC_COMPARE_TICKS (RTC_TICK_PER_SECOND*BOARD_CONFIG_SEND_INTERVAL)
 
 #define CLOCK_CONFIG_IRQ_PRIORITY 2
 
-#define RTC_DEFAULT_CONFIG_IRQ_PRIORITY 3
 
 void POWER_CLOCK_IRQHandler(void){
   if (nrf_clock_event_check(NRF_CLOCK_EVENT_HFCLKSTARTED)) {
@@ -107,99 +100,6 @@ void clock_initialization()
 
 //nRF5_SDK_12.3.0\examples\peripheral\rtc\main.c
 
-void led_on(uint32_t gpio){
-#ifdef BOARD_CONFIG_LED_ACTIVE_LOW
-  nrf_gpio_pin_clear(gpio);
-#else
-  nrf_gpio_pin_set(gpio);
-#endif
-}
-
-void led_off(uint32_t gpio){
-#ifdef BOARD_CONFIG_LED_ACTIVE_LOW
-  nrf_gpio_pin_set(gpio);
-#else
-  nrf_gpio_pin_clear(gpio);
-#endif
-}
-
-void led_pin_init(){
-  nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_0);
-  led_off(BOARD_CONFIG_LED_PIN_0);
-
-  nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_1);
-  led_off(BOARD_CONFIG_LED_PIN_1);
-
-  nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_2);
-  led_off(BOARD_CONFIG_LED_PIN_2);
-}
-
-volatile uint32_t g_counter;
-volatile uint32_t g_rtc_wakeup;
-
-void RTC0_IRQHandler(void)
-{
-  //from nrf_drv_rtc handler, why so complex?
-  if( nrf_rtc_int_is_enabled(NRF_RTC0, NRF_RTC_INT_TICK_MASK) &&
-      nrf_rtc_event_pending (NRF_RTC0, NRF_RTC_EVENT_TICK)) {
-    nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
-      
-    led_on(BOARD_CONFIG_LED_PIN_1);
-  }
-
-  if( nrf_rtc_int_is_enabled(NRF_RTC0, NRF_RTC_INT_COMPARE0_MASK) &&
-      nrf_rtc_event_pending (NRF_RTC0, NRF_RTC_EVENT_COMPARE_0)) {
-    //reset event
-    nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);    
-
-    //set new value
-    uint32_t val = nrf_rtc_counter_get(NRF_RTC0);
-    g_counter = val;//copy counter
-    g_rtc_wakeup = 1;//wake up marker
-    val = RTC_WRAP((val + RTC_COMPARE_TICKS));
-    nrf_rtc_cc_set(NRF_RTC0, 0, val);
-
-    led_on(BOARD_CONFIG_LED_PIN_0);
-  }
-
-}
-
-
-/*
-
-    event = NRF_RTC_EVENT_TICK;
-    if (nrf_rtc_int_is_enabled(p_reg,NRF_RTC_INT_TICK_MASK) &&
-        nrf_rtc_event_pending(p_reg, event))
-    {
-        nrf_rtc_event_clear(p_reg, event);
-        NRF_LOG_DEBUG("Event: %s, instance id: %d.\r\n", (uint32_t)EVT_TO_STR(event), instance_id);
-        m_handlers[instance_id](NRF_DRV_RTC_INT_TICK);
-    }
-
-*/
-
-
-void rtc_init(){  
-  //NRF_CLOCK->LFCLKSRC = (CLOCK_LFCLKSRC_SRC_Xtal << CLOCK_LFCLKSRC_SRC_Pos);  
-  nrf_clock_lf_src_set(NRF_CLOCK_LFCLK_Xtal);
- 
-  NRF_RTC0 -> POWER = 1;
-  nrf_rtc_prescaler_set(NRF_RTC0, RTC_PRESCALER);  
-
-  nrf_rtc_cc_set(NRF_RTC0, 0, RTC_COMPARE_TICKS);  
-  
-  nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
-  nrf_rtc_event_disable(NRF_RTC0, RTC_EVTENSET_TICK_Msk);
-
-  nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_event_enable(NRF_RTC0, RTC_EVTENSET_COMPARE0_Msk);
-
-  nrf_drv_common_irq_enable(RTC0_IRQn, RTC_DEFAULT_CONFIG_IRQ_PRIORITY);
-  nrf_rtc_int_enable(NRF_RTC0, /*NRF_RTC_INT_TICK_MASK |*/ NRF_RTC_INT_COMPARE0_MASK); 
-
-  nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_START);
-  
-}
 
 void check_error(int rc){
   if(rc!=NRFSE_OK){
@@ -215,21 +115,21 @@ void check_error(int rc){
 void ppi_init(){
   
 
-  NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
-  NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_ADC->TASKS_START;
-  NRF_PPI->CHENSET = (1 << RTC0_TO_ADC_CHANNEL);
+  //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
+  //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_ADC->TASKS_START;
+  //NRF_PPI->CHENSET = (1 << RTC0_TO_ADC_CHANNEL);
 
   //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
   //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_RADIO->TXEN;
-  NRF_PPI->CHENSET = (1 << RTC0_TO_RADIO_CHANNEL);
+  //NRF_PPI->CHENSET = (1 << RTC0_TO_RADIO_CHANNEL);
 
-  /*nrf_ppi_channel_endpoint_setup(
+  nrf_ppi_channel_endpoint_setup(
     NRF_PPI_CHANNEL0,
     nrf_rtc_event_address_get(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0),
     nrf_adc_task_address_get(NRF_ADC_TASK_START)
   );
 
-  nrf_ppi_channel_enable(NRF_PPI_CHANNEL0);*/
+  nrf_ppi_channel_enable(NRF_PPI_CHANNEL0);
 }
 
 typedef struct payload_struct_s {
@@ -238,6 +138,7 @@ typedef struct payload_struct_s {
   uint8_t error_code;
   uint8_t error_count;
 } payload_struct_t;
+
 
 int main(void)
 {
