@@ -12,7 +12,9 @@
 #ifndef BLE_TEST_BOARD_H
 #define BLE_TEST_BOARD_H
 
-// LEDs definitions for PCA10028
+//hardware definitions for ble400 eval board
+
+
 #define LEDS_NUMBER    5
 
 #define LED_START      18

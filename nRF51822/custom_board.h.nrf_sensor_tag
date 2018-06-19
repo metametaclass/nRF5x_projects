@@ -12,7 +12,8 @@
 #ifndef BLE_TEST_BOARD_H
 #define BLE_TEST_BOARD_H
 
-// LEDs definitions for nrf sensor tag ("itc polyu hk")
+// hardware definitions for nrf sensor tag ("itc polyu hk")
+
 #define LEDS_NUMBER    3
 
 #define LED_START      17

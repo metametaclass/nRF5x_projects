@@ -12,6 +12,8 @@
 #ifndef BLE_TEST_BOARD_H
 #define BLE_TEST_BOARD_H
 
+//hardware definitions for cjmcu8223 board
+
 #define LEDS_NUMBER    1
 
 #define LED_START      7
