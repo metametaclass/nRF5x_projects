@@ -21,6 +21,13 @@
 //hardware config
 #include "board_config.h"
 
+//battery measurement
+#include "adc.h"
+
+//error codes
+#include "nrfs_errors.h"
+
+//radio transmitter
 #include "radio_tx.h"
 
 //32768/4096
@@ -185,12 +192,28 @@ void rtc_init(){
   
 }
 
+void check_error(int rc){
+  if(rc!=NRFSE_OK){
+    led_on(BOARD_CONFIG_LED_PIN_2);
+    nrf_delay_ms(250);
+    led_off(BOARD_CONFIG_LED_PIN_2);
+  }
+}
+
+typedef struct payload_struct_s {
+  uint32_t adc;
+  uint32_t wake_up_counter;  
+  uint8_t error_code;
+  uint8_t error_count;
+} payload_struct_t;
 
 int main(void)
 {
   clock_initialization();
 
   radio_initialization();
+
+  adc_initialization();
 
   led_pin_init();
 
@@ -203,13 +226,15 @@ int main(void)
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
-  uint32_t wake_up_counter = 0;
+  payload_struct_t payload = {0};  
+  payload.adc = 0x1234;  
+  int rc;
     
   while (true)
   {
     //reset marker
     g_rtc_wakeup = 0;
-
+    //payload.error_code = 0xFF;
     led_off(BOARD_CONFIG_LED_PIN_0);
     led_off(BOARD_CONFIG_LED_PIN_1);
     led_off(BOARD_CONFIG_LED_PIN_2);
@@ -217,19 +242,24 @@ int main(void)
     __WFE();
     __WFE();
     led_on(BOARD_CONFIG_LED_PIN_1);
-    wake_up_counter++;
+    payload.wake_up_counter++;
 
     //do some work
     //nrf_delay_ms(10);
     if(g_rtc_wakeup) {
-      int32_t rc = send_packet((uint8_t*)&wake_up_counter);
-      if(rc) {
-        led_off(BOARD_CONFIG_LED_PIN_0);
-        led_off(BOARD_CONFIG_LED_PIN_1);
-        led_on(BOARD_CONFIG_LED_PIN_2);
-        nrf_delay_ms(250);
-        led_off(BOARD_CONFIG_LED_PIN_2);
+      rc = adc_start();
+      if(rc!=NRFSE_OK) {
+        payload.error_code = rc;
+        payload.error_count++;
       }
+      rc = send_packet((uint8_t*)&payload);
+      check_error(rc);
+    }
+
+    rc = adc_get_result(&payload.adc);    
+    if(rc!=NRFSE_OK && rc!=NRFSE_BUSY){
+      payload.error_code = rc;
+      payload.error_count++;
     }
   }
 }

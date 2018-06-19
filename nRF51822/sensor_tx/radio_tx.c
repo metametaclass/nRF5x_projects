@@ -7,6 +7,9 @@
 //irq control
 #include "nrf_drv_common.h"
 
+//error codes
+#include "nrfs_errors.h"
+
 #include "board_config.h"
 
 
@@ -21,7 +24,7 @@
 #define PACKET_LENGTH_FIELD_SIZE  (0UL)  /**< Packet length field size in bits. */
 
 #define PACKET_BASE_ADDRESS_LENGTH  (4UL)                   //!< Packet base address length field size in bytes
-#define PACKET_STATIC_LENGTH        (1UL)                   //!< Packet static length in bytes
+#define PACKET_STATIC_LENGTH        (10UL)                   //!< Packet static length in bytes
 #define PACKET_PAYLOAD_MAXSIZE      (PACKET_STATIC_LENGTH)  //!< Packet payload maximum size in bytes
 
 
@@ -131,12 +134,12 @@ void RADIO_IRQHandler(){
 }
 
 
-int32_t send_packet(uint8_t *packet){ 
+int send_packet(uint8_t *packet){ 
 
   // start TX sequence
   if(g_radio_active) {
     //do nothing
-    return 1;
+    return NRFSE_BUSY;
   }
 
   g_radio_active = 1;
@@ -147,5 +150,5 @@ int32_t send_packet(uint8_t *packet){
   NRF_RADIO->EVENTS_DISABLED = 0U;
   NRF_RADIO->TASKS_TXEN   = 1;  
 
-  return 0;
+  return NRFSE_OK;
 }

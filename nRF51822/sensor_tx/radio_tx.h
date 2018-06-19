@@ -9,4 +9,4 @@
 void radio_initialization();
 
 
-int32_t send_packet(uint8_t *packet);
+int send_packet(uint8_t *packet);
