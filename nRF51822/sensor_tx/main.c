@@ -21,32 +21,68 @@
 //hardware config
 #include "board_config.h"
 
-
+//32768/4096
 #define RTC_PRESCALER 4095 
+
+//8 ticks per second 
 #define RTC_TICK_PER_SECOND 8
+
+//main wake-up event interval
 #define RTC_COMPARE_TICKS (RTC_TICK_PER_SECOND*5)
+
+#define CLOCK_CONFIG_IRQ_PRIORITY 2
+
+#define RTC_DEFAULT_CONFIG_IRQ_PRIORITY 3
+
+void POWER_CLOCK_IRQHandler(void){
+  if (nrf_clock_event_check(NRF_CLOCK_EVENT_HFCLKSTARTED)) {
+    nrf_clock_event_clear(NRF_CLOCK_EVENT_HFCLKSTARTED);
+    nrf_clock_int_disable(NRF_CLOCK_INT_HF_STARTED_MASK);
+  }
+
+  if (nrf_clock_event_check(NRF_CLOCK_EVENT_LFCLKSTARTED)) {
+    nrf_clock_event_clear(NRF_CLOCK_EVENT_LFCLKSTARTED);        
+    nrf_clock_int_disable(NRF_CLOCK_INT_LF_STARTED_MASK);
+  }
+
+}
+
 
 void clock_initialization()
 {
+  //nrf_drv_common_irq_enable(POWER_CLOCK_IRQn, CLOCK_CONFIG_IRQ_PRIORITY);
+
+  //enable HF and LF start interrupts
+  //NRF_CLOCK->INTENSET = (CLOCK_INTENSET_LFCLKSTARTED_Enabled << CLOCK_INTENSET_LFCLKSTARTED_Pos);
+  //nrf_clock_int_enable(NRF_CLOCK_INT_HF_STARTED_MASK | NRF_CLOCK_INT_LF_STARTED_MASK);
+
   /* Start 16 MHz crystal oscillator */
-  NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
-  NRF_CLOCK->TASKS_HFCLKSTART    = 1;
+
+  //NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+  nrf_clock_event_clear(NRF_CLOCK_EVENT_HFCLKSTARTED);
+
+  //NRF_CLOCK->TASKS_HFCLKSTART    = 1;
+  nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTART);
 
   /* Wait for the external oscillator to start up */
   while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
   {
-      
+    
   }
 
-    /* Start low frequency crystal oscillator for app_timer(used by bsp)*/
-  NRF_CLOCK->LFCLKSRC            = (CLOCK_LFCLKSRC_SRC_Xtal << CLOCK_LFCLKSRC_SRC_Pos);
-  NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
-  //NRF_CLOCK->INTENSET = (CLOCK_INTENSET_LFCLKSTARTED_Enabled << CLOCK_INTENSET_LFCLKSTARTED_Pos);
-  NRF_CLOCK->TASKS_LFCLKSTART    = 1;
+    /* Start low frequency crystal oscillator for RTC*/
+  
+
+  //NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;  
+  nrf_clock_event_clear(NRF_CLOCK_EVENT_LFCLKSTARTED);
+
+  //NRF_CLOCK->TASKS_LFCLKSTART    = 1;
+  nrf_clock_task_trigger(NRF_CLOCK_TASK_LFCLKSTART);
+
 
   while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0)
   {  
-
+    
   }
 }
 
@@ -83,11 +119,9 @@ void RTC0_IRQHandler(void)
   if( nrf_rtc_int_is_enabled(NRF_RTC0, NRF_RTC_INT_TICK_MASK) &&
       nrf_rtc_event_pending (NRF_RTC0, NRF_RTC_EVENT_TICK)) {
     nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
-  
-    //nrf_gpio_pin_clear(BOARD_CONFIG_LED_PIN_0);
+      
+    led_on(BOARD_CONFIG_LED_PIN_1);
   }
-  //NRF_RTC0 -> EVENTS_TICK = 0;
-
 
   if( nrf_rtc_int_is_enabled(NRF_RTC0, NRF_RTC_INT_COMPARE0_MASK) &&
       nrf_rtc_event_pending (NRF_RTC0, NRF_RTC_EVENT_COMPARE_0)) {
@@ -102,9 +136,6 @@ void RTC0_IRQHandler(void)
     led_on(BOARD_CONFIG_LED_PIN_0);
   }
 
-  
-  //nrf_gpio_pin_toggle(BOARD_CONFIG_LED_PIN_1);
-  //nrf_drv_rtc_int_handler(NRF_RTC0,RTC0_INSTANCE_INDEX, NRF_RTC_CC_CHANNEL_COUNT(0));
 }
 
 
@@ -122,7 +153,8 @@ void RTC0_IRQHandler(void)
 */
 
 
-void rtc_init(){
+void rtc_init(){  
+  //NRF_CLOCK->LFCLKSRC = (CLOCK_LFCLKSRC_SRC_Xtal << CLOCK_LFCLKSRC_SRC_Pos);  
   nrf_clock_lf_src_set(NRF_CLOCK_LFCLK_Xtal);
  
   NRF_RTC0 -> POWER = 1;
@@ -130,7 +162,7 @@ void rtc_init(){
 
   nrf_rtc_cc_set(NRF_RTC0, 0, RTC_COMPARE_TICKS);
 
-  nrf_drv_common_irq_enable(RTC0_IRQn, 7);
+  nrf_drv_common_irq_enable(RTC0_IRQn, RTC_DEFAULT_CONFIG_IRQ_PRIORITY);
   
   nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
   nrf_rtc_event_disable(NRF_RTC0, NRF_RTC_EVENT_TICK);
@@ -139,6 +171,7 @@ void rtc_init(){
   nrf_rtc_event_disable(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
 
   nrf_rtc_int_enable(NRF_RTC0, /*NRF_RTC_INT_TICK_MASK |*/ NRF_RTC_INT_COMPARE0_MASK); 
+
   nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_START);
   
 }
