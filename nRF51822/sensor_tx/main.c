@@ -110,19 +110,13 @@ void check_error(int rc){
 }
 
 #define RTC0_TO_ADC_CHANNEL 0
-#define RTC0_TO_RADIO_CHANNEL 28
 
 void ppi_init(){
-  
 
   //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
   //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_ADC->TASKS_START;
   //NRF_PPI->CHENSET = (1 << RTC0_TO_ADC_CHANNEL);
-
-  //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
-  //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_RADIO->TXEN;
-  //NRF_PPI->CHENSET = (1 << RTC0_TO_RADIO_CHANNEL);
-
+  
   nrf_ppi_channel_endpoint_setup(
     NRF_PPI_CHANNEL0,
     nrf_rtc_event_address_get(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0),
