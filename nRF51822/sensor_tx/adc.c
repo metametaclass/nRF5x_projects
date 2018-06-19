@@ -4,6 +4,8 @@
 
 #include "nrf_adc.h"
 
+#include "adc.h"
+
 //error codes
 #include "nrfs_errors.h"
 
@@ -27,14 +29,18 @@ void adc_initialization(){
   nrf_adc_int_enable(NRF_ADC_INT_END_MASK);
 }
 
-volatile uint32_t g_adc_result = 0x80000000;
+static volatile uint32_t g_adc_result = 0x80000000;
 
-volatile uint32_t g_adc_finished = 0;
+static volatile uint32_t g_adc_finished = 0;
+
+static volatile uint32_t g_adc_wakeup = 0;
+
 
 void ADC_IRQHandler(void) {
   nrf_adc_event_clear(NRF_ADC_EVENT_END);
   g_adc_result = nrf_adc_result_get();
   g_adc_finished = 2;
+  g_adc_wakeup = 1;
 }
 
 int adc_start() {
@@ -48,12 +54,9 @@ int adc_start() {
 }
 
 int adc_get_result(uint32_t *result){
-  //uint32_t finished = g_adc_finished;
-  *result = g_adc_result;
-  g_adc_finished = 0;
-  return 0;
+  uint32_t finished = g_adc_finished;
 
-  /*if(finished == 2){
+  if(finished == 2){
     *result = g_adc_result;
     g_adc_finished = 0;
     return NRFSE_OK;
@@ -64,5 +67,13 @@ int adc_get_result(uint32_t *result){
   if(finished == 0) {
     return NRFSE_NODATA;
   }
-  return NRFSE_GENERIC;*/
+  return NRFSE_GENERIC;
+}
+
+void adc_reset_wakeup_marker(){
+  g_adc_wakeup = 0;
+}
+
+int adc_is_adc_wakeup(){
+  return g_adc_wakeup!=0;
 }

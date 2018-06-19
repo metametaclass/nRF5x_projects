@@ -226,15 +226,14 @@ int main(void)
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
-  payload_struct_t payload = {0};  
-  payload.adc = 0x1234;  
+  payload_struct_t payload = {0};    
   int rc;
     
   while (true)
   {
     //reset marker
     g_rtc_wakeup = 0;
-    //payload.error_code = 0xFF;
+    adc_reset_wakeup_marker();    
     led_off(BOARD_CONFIG_LED_PIN_0);
     led_off(BOARD_CONFIG_LED_PIN_1);
     led_off(BOARD_CONFIG_LED_PIN_2);
@@ -250,16 +249,19 @@ int main(void)
       rc = adc_start();
       if(rc!=NRFSE_OK) {
         payload.error_code = rc;
-        payload.error_count++;
+        payload.error_count++;        
       }
       rc = send_packet((uint8_t*)&payload);
       check_error(rc);
     }
 
     rc = adc_get_result(&payload.adc);    
-    if(rc!=NRFSE_OK && rc!=NRFSE_BUSY){
-      payload.error_code = rc;
-      payload.error_count++;
+    if(rc==NRFSE_OK){
+      //reset error code
+      payload.error_code = NRFSE_OK;
+      //rc = send_packet((uint8_t*)&payload);
+      //check_error(rc); 
     }
+    
   }
 }
