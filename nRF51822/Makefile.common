@@ -153,7 +153,7 @@ $(OBJECT_DIRECTORY)/%.o: %.S
 $(OBJECT_DIRECTORY)/%.o: %.cpp
 	$(CPP) -c $(CFLAGS) $< -o $@
 
-flash: $(OUTPUT_BINARY_DIRECTORY)/$(HEX)
+flash: $(OUTPUT_BINARY_DIRECTORY)/$(HEX) $(OUTPUT_BINARY_DIRECTORY)/$(LIST)
 	$(OPENOCD) -d2 -f $(TEMPLATEROOT)/openocd.cfg -c 'init_reset halt; program $(OUTPUT_BINARY_DIRECTORY)/$(HEX) verify; reset; exit'
 
 flash_erase: 
