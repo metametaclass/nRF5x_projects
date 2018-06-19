@@ -21,6 +21,8 @@
 //hardware config
 #include "board_config.h"
 
+#include "radio_tx.h"
+
 //32768/4096
 #define RTC_PRESCALER 4095 
 
@@ -110,8 +112,13 @@ void led_pin_init(){
 
   nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_1);
   led_off(BOARD_CONFIG_LED_PIN_1);
+
+  nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_2);
+  led_off(BOARD_CONFIG_LED_PIN_2);
 }
 
+volatile uint32_t g_counter;
+volatile uint32_t g_rtc_wakeup;
 
 void RTC0_IRQHandler(void)
 {
@@ -130,6 +137,8 @@ void RTC0_IRQHandler(void)
 
     //set new value
     uint32_t val = nrf_rtc_counter_get(NRF_RTC0);
+    g_counter = val;//copy counter
+    g_rtc_wakeup = 1;//wake up marker
     val = RTC_WRAP((val + RTC_COMPARE_TICKS));
     nrf_rtc_cc_set(NRF_RTC0, 0, val);
 
@@ -181,6 +190,8 @@ int main(void)
 {
   clock_initialization();
 
+  radio_initialization();
+
   led_pin_init();
 
   //NRF_POWER->TASKS_CONSTLAT = 1;//TODO: replace with LOWPWR (default value)
@@ -190,18 +201,33 @@ int main(void)
   led_on(BOARD_CONFIG_LED_PIN_0);
   nrf_delay_ms(250);
   led_off(BOARD_CONFIG_LED_PIN_0);
+
+
     
   while (true)
   {
+    //reset marker
+    g_rtc_wakeup = 0;
+
     led_off(BOARD_CONFIG_LED_PIN_0);
     led_off(BOARD_CONFIG_LED_PIN_1);
+    led_off(BOARD_CONFIG_LED_PIN_2);
     __SEV();
     __WFE();
     __WFE();
     led_on(BOARD_CONFIG_LED_PIN_1);
 
-
     //do some work
-    nrf_delay_ms(10);
+    //nrf_delay_ms(10);
+    if(g_rtc_wakeup) {
+      int32_t rc = send_packet((uint8_t*)&g_counter);
+      if(rc) {
+        led_off(BOARD_CONFIG_LED_PIN_0);
+        led_off(BOARD_CONFIG_LED_PIN_1);
+        led_on(BOARD_CONFIG_LED_PIN_2);
+        nrf_delay_ms(250);
+        led_off(BOARD_CONFIG_LED_PIN_2);
+      }
+    }
   }
 }

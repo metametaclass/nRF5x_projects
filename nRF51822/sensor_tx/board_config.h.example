@@ -2,11 +2,15 @@
 #define BOARD_CONFIG_H
 
 #define BOARD_CONFIG_LED_PIN_0 18
-#define BOARD_CONFIG_LED_PIN_1 22
-
+#define BOARD_CONFIG_LED_PIN_1 19
+#define BOARD_CONFIG_LED_PIN_2 20
 
 //use if leds connected to Vcc
 //#define BOARD_CONFIG_LED_ACTIVE_LOW
 
+//use nordic radio example compatible setup
+//nRF5_SDK_12.3.0/examples/peripheral/radio/receiver
+
+//#define USE_NRF_EXAMPLE_RF_SETUP
 
 #endif
