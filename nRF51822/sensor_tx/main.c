@@ -15,14 +15,20 @@
 //rtc
 #include "nrf_rtc.h"
 
-//gpio pins
+//delay
 #include "nrf_delay.h"
+
+//ppi
+//#include "nrf_ppi.h"
 
 //hardware config
 #include "board_config.h"
 
 //battery measurement
 #include "adc.h"
+
+//events address
+//#include "nrf_adc.h"
 
 //error codes
 #include "nrfs_errors.h"
@@ -36,8 +42,12 @@
 //8 ticks per second 
 #define RTC_TICK_PER_SECOND 8
 
+#ifndef BOARD_CONFIG_SEND_INTERVAL
+#define BOARD_CONFIG_SEND_INTERVAL 5
+#endif
+
 //main wake-up event interval
-#define RTC_COMPARE_TICKS (RTC_TICK_PER_SECOND*5)
+#define RTC_COMPARE_TICKS (RTC_TICK_PER_SECOND*BOARD_CONFIG_SEND_INTERVAL)
 
 #define CLOCK_CONFIG_IRQ_PRIORITY 2
 
@@ -176,16 +186,15 @@ void rtc_init(){
   NRF_RTC0 -> POWER = 1;
   nrf_rtc_prescaler_set(NRF_RTC0, RTC_PRESCALER);  
 
-  nrf_rtc_cc_set(NRF_RTC0, 0, RTC_COMPARE_TICKS);
-
-  nrf_drv_common_irq_enable(RTC0_IRQn, RTC_DEFAULT_CONFIG_IRQ_PRIORITY);
+  nrf_rtc_cc_set(NRF_RTC0, 0, RTC_COMPARE_TICKS);  
   
   nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
-  nrf_rtc_event_disable(NRF_RTC0, NRF_RTC_EVENT_TICK);
+  nrf_rtc_event_disable(NRF_RTC0, RTC_EVTENSET_TICK_Msk);
 
   nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_event_disable(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_event_enable(NRF_RTC0, RTC_EVTENSET_COMPARE0_Msk);
 
+  nrf_drv_common_irq_enable(RTC0_IRQn, RTC_DEFAULT_CONFIG_IRQ_PRIORITY);
   nrf_rtc_int_enable(NRF_RTC0, /*NRF_RTC_INT_TICK_MASK |*/ NRF_RTC_INT_COMPARE0_MASK); 
 
   nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_START);
@@ -198,6 +207,29 @@ void check_error(int rc){
     nrf_delay_ms(250);
     led_off(BOARD_CONFIG_LED_PIN_2);
   }
+}
+
+#define RTC0_TO_ADC_CHANNEL 0
+#define RTC0_TO_RADIO_CHANNEL 28
+
+void ppi_init(){
+  
+
+  NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
+  NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_ADC->TASKS_START;
+  NRF_PPI->CHENSET = (1 << RTC0_TO_ADC_CHANNEL);
+
+  //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
+  //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_RADIO->TXEN;
+  NRF_PPI->CHENSET = (1 << RTC0_TO_RADIO_CHANNEL);
+
+  /*nrf_ppi_channel_endpoint_setup(
+    NRF_PPI_CHANNEL0,
+    nrf_rtc_event_address_get(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0),
+    nrf_adc_task_address_get(NRF_ADC_TASK_START)
+  );
+
+  nrf_ppi_channel_enable(NRF_PPI_CHANNEL0);*/
 }
 
 typedef struct payload_struct_s {
@@ -215,6 +247,8 @@ int main(void)
 
   adc_initialization();
 
+  ppi_init();
+
   led_pin_init();
 
   //NRF_POWER->TASKS_CONSTLAT = 1;//TODO: replace with LOWPWR (default value)
@@ -227,13 +261,17 @@ int main(void)
 
 
   payload_struct_t payload = {0};    
+  payload.error_code = 0xFF;
   int rc;
+
+  //rc = send_packet((uint8_t*)&payload);
+  //check_error(rc); 
     
   while (true)
   {
     //reset marker
-    g_rtc_wakeup = 0;
-    adc_reset_wakeup_marker();    
+    //g_rtc_wakeup = 0;
+    //adc_reset_wakeup_marker();    
     led_off(BOARD_CONFIG_LED_PIN_0);
     led_off(BOARD_CONFIG_LED_PIN_1);
     led_off(BOARD_CONFIG_LED_PIN_2);
@@ -245,7 +283,7 @@ int main(void)
 
     //do some work
     //nrf_delay_ms(10);
-    if(g_rtc_wakeup) {
+    /*(g_rtc_wakeup) {
       rc = adc_start();
       if(rc!=NRFSE_OK) {
         payload.error_code = rc;
@@ -253,15 +291,15 @@ int main(void)
       }
       rc = send_packet((uint8_t*)&payload);
       check_error(rc);
-    }
-
-    rc = adc_get_result(&payload.adc);    
-    if(rc==NRFSE_OK){
-      //reset error code
-      payload.error_code = NRFSE_OK;
+    }*/
+    if(adc_is_adc_wakeup()){
+      adc_reset_wakeup_marker();
       //rc = send_packet((uint8_t*)&payload);
       //check_error(rc); 
-    }
-    
+      rc = adc_get_result(&payload.adc);    
+      payload.error_code = rc;
+      rc = send_packet((uint8_t*)&payload);
+      check_error(rc);       
+    }    
   }
 }

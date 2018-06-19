@@ -128,7 +128,7 @@ void RADIO_IRQHandler(){
 
   if (NRF_RADIO->EVENTS_DISABLED && (NRF_RADIO->INTENSET & RADIO_INTENSET_DISABLED_Msk)) {
     NRF_RADIO->EVENTS_DISABLED = 0;
-    //DEBUG_PIN_SET(DEBUGPIN3);      
+    
     g_radio_active = 0;
   }
 }

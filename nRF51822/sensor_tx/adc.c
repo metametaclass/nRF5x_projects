@@ -44,12 +44,12 @@ void ADC_IRQHandler(void) {
 }
 
 int adc_start() {
-  if(g_adc_finished == 1){
-    return NRFSE_BUSY;
-  }
-  g_adc_finished = 1;
-  nrf_adc_event_clear(NRF_ADC_EVENT_END);
-  nrf_adc_start();
+  //if(g_adc_finished == 1){
+    //return NRFSE_BUSY;
+  //}
+  //g_adc_finished = 1;
+  //nrf_adc_event_clear(NRF_ADC_EVENT_END);
+  //nrf_adc_start();
   return NRFSE_OK;
 }
 
