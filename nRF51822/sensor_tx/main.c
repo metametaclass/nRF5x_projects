@@ -203,6 +203,7 @@ int main(void)
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
+  uint32_t wake_up_counter = 0;
     
   while (true)
   {
@@ -216,11 +217,12 @@ int main(void)
     __WFE();
     __WFE();
     led_on(BOARD_CONFIG_LED_PIN_1);
+    wake_up_counter++;
 
     //do some work
     //nrf_delay_ms(10);
     if(g_rtc_wakeup) {
-      int32_t rc = send_packet((uint8_t*)&g_counter);
+      int32_t rc = send_packet((uint8_t*)&wake_up_counter);
       if(rc) {
         led_off(BOARD_CONFIG_LED_PIN_0);
         led_off(BOARD_CONFIG_LED_PIN_1);

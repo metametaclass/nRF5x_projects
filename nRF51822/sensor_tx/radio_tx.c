@@ -147,31 +147,5 @@ int32_t send_packet(uint8_t *packet){
   NRF_RADIO->EVENTS_DISABLED = 0U;
   NRF_RADIO->TASKS_TXEN   = 1;  
 
-  /*while (NRF_RADIO->EVENTS_READY == 0U)
-  {
-      // wait
-  }
- 
-  NRF_RADIO->EVENTS_END  = 0U;
-  NRF_RADIO->TASKS_START = 1U;
-
-  while (NRF_RADIO->EVENTS_END == 0U)
-  {
-    // wait
-  }
-
-  uint32_t err_code = bsp_indication_set(BSP_INDICATE_SENT_OK);
-  NRF_LOG_INFO("The packet was sent\r\n");
-  APP_ERROR_CHECK(err_code);
-
-  NRF_RADIO->EVENTS_DISABLED = 0U;
-  // Disable radio
-  NRF_RADIO->TASKS_DISABLE = 1U;
-
-  while (NRF_RADIO->EVENTS_DISABLED == 0U)
-  {
-    // wait
-  }*/
-
   return 0;
 }
