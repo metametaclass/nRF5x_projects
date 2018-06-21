@@ -13,6 +13,10 @@
 //schedule next compare event on radio finish
 #include "rtc.h"
 
+//stopping clock
+#include "nrf_clock.h"
+
+
 #include "board_config.h"
 
 
@@ -130,6 +134,9 @@ volatile uint32_t g_radio_active;
 void RADIO_IRQHandler(){
 
   if (NRF_RADIO->EVENTS_DISABLED && (NRF_RADIO->INTENSET & RADIO_INTENSET_DISABLED_Msk)) {
+    //stop HFCLK
+    nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTOP);
+
     NRF_RADIO->EVENTS_DISABLED = 0;
     rtc_schedule_next_event();
     g_radio_active = 0;

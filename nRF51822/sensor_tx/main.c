@@ -74,13 +74,13 @@ void clock_initialization()
   nrf_clock_event_clear(NRF_CLOCK_EVENT_HFCLKSTARTED);
 
   //NRF_CLOCK->TASKS_HFCLKSTART    = 1;
-  nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTART);
+  //nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTART);
 
   /* Wait for the external oscillator to start up */
-  while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
-  {
+  //while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
+  //{
     
-  }
+  //}
 
     /* Start low frequency crystal oscillator for RTC*/
   
@@ -109,7 +109,8 @@ void check_error(int rc){
   }
 }
 
-#define RTC0_TO_ADC_CHANNEL 0
+#define RTC0_TO_HFCLK_CHANNEL 0
+#define HFCLK_TO_ADC_CHANNEL 1
 
 void ppi_init(){
 
@@ -118,12 +119,20 @@ void ppi_init(){
   //NRF_PPI->CHENSET = (1 << RTC0_TO_ADC_CHANNEL);
   
   nrf_ppi_channel_endpoint_setup(
-    NRF_PPI_CHANNEL0,
+    RTC0_TO_HFCLK_CHANNEL,
     nrf_rtc_event_address_get(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0),
+    nrf_clock_task_address_get(NRF_CLOCK_TASK_HFCLKSTART)
+  );
+
+  nrf_ppi_channel_endpoint_setup(
+    HFCLK_TO_ADC_CHANNEL,
+    nrf_clock_event_address_get(NRF_CLOCK_EVENT_HFCLKSTARTED),
     nrf_adc_task_address_get(NRF_ADC_TASK_START)
   );
 
-  nrf_ppi_channel_enable(NRF_PPI_CHANNEL0);
+  nrf_ppi_channel_enable(RTC0_TO_HFCLK_CHANNEL);
+  nrf_ppi_channel_enable(HFCLK_TO_ADC_CHANNEL);
+  
 }
 
 typedef struct payload_struct_s {
@@ -173,7 +182,7 @@ int main(void)
     __SEV();
     __WFE();
     __WFE();
-    led_on(BOARD_CONFIG_LED_PIN_1);
+    //led_on(BOARD_CONFIG_LED_PIN_1);
     payload.wake_up_counter++;
 
     //do some work
