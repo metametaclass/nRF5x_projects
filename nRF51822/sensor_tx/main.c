@@ -42,6 +42,8 @@
 //radio transmitter
 #include "radio_tx.h"
 
+//payload packey structure
+#include "payload.h"
 
 #define CLOCK_CONFIG_IRQ_PRIORITY 2
 
@@ -139,40 +141,9 @@ void ppi_init(){
   
 }
 
-typedef struct payload_struct_s {
-  uint8_t size;  
-  union {
-    uint8_t s1;
-    struct {
-      uint8_t no_ack :1;
-      uint8_t pid :2;
-    };
-  };
-  /*uint32_t adc;
-  uint32_t wake_up_counter;  
-  uint8_t error_code;
-  uint8_t error_count;*/
-  uint8_t data[MAX_RADIO_PAYLOAD_SIZE];
-} __attribute__((packed)) payload_struct_t;
 
 
 
-void put_uint32(payload_struct_t *payload, uint32_t value){
-  if(payload->size+sizeof(value) > MAX_RADIO_PAYLOAD_SIZE)  {
-    return;
-  }
-  memcpy(&payload->data[payload->size], &value, sizeof(value));
-  payload->size += sizeof(value);
-}
-
-
-void put_uint8(payload_struct_t *payload, uint8_t value){
-  if(payload->size+sizeof(value) > MAX_RADIO_PAYLOAD_SIZE)  {
-    return;
-  }
-  memcpy(&payload->data[payload->size], &value, sizeof(value));
-  payload->size += sizeof(value);
-}
 
 
 int main(void)
@@ -202,7 +173,7 @@ int main(void)
   payload_struct_t payload = {0};      
   int rc;
   uint8_t packet_counter = 0;//PID
-  uint32_t wake_up_counter = 0;
+  uint8_t wake_up_counter = 0;
 
   //rc = send_packet((uint8_t*)&payload);
   //check_error(rc); 
@@ -233,12 +204,28 @@ int main(void)
       payload.no_ack = 1;
       payload.size = 0;
       uint32_t adc;
-      
+
+      put_uint8(&payload, PROTOCOL_VERSION_1);
+      put_uint16(&payload, (uint16_t) (NRF_FICR->DEVICEID[0]));
+
       rc = adc_get_result(&adc);
-      put_uint32(&payload, adc);
-      put_uint32(&payload, wake_up_counter);      
-      put_uint8(&payload, rc);
-      put_uint8(&payload, 0);      
+      
+      if(rc){
+        put_uint8(&payload, SENSOR_TYPE_ERRORS | 1); //type:B, count:1  
+        put_uint8(&payload, SENSOR_ADC_BATTERY);
+        put_uint8(&payload, (uint8_t)rc);
+      }else{
+        //put_uint8(&payload, SENSOR_TYPE_u8u16 | 1); //type:1, count:1
+        //put_uint8(&payload, SENSOR_ADC_BATTERY);
+        put_uint8(&payload, SENSOR_TYPE_BATTERY);
+        put_uint16(&payload, (uint16_t)adc);
+      }
+
+      /*put_uint8(&payload, SENSOR_TYPE_u8u8 | 1) //type:0, count:1
+      put_uint8(&payload, SENSOR_WAKEUP);
+      put_uint8(&payload, wake_up_counter);      */
+      put_uint8(&payload, SENSOR_TYPE_WAKEUP);//well-known sensor type
+      put_uint8(&payload, wake_up_counter);
 
       rc = send_packet((uint8_t*)&payload);
       check_error(rc);       
