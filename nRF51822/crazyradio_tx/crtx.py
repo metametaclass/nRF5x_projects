@@ -165,10 +165,10 @@ class Crazyradio:
         self.set_cont_carrier(False)
         self.set_address((0xC0, 0x01, 0x23, 0x45, 0x67))
         self.set_power(self.P_0DBM)
-        #self.set_arc(3)
+        self.set_arc(3)
         #self.set_ard_bytes(32)
-        #self.set_ack_enable(True)
-        self.set_ack_enable(False)
+        self.set_ack_enable(True)
+        #self.set_ack_enable(False)
 
     def close(self):
         if (pyusb1 is False):
