@@ -140,11 +140,39 @@ void ppi_init(){
 }
 
 typedef struct payload_struct_s {
-  uint32_t adc;
+  uint8_t size;  
+  union {
+    uint8_t s1;
+    struct {
+      uint8_t no_ack :1;
+      uint8_t pid :2;
+    };
+  };
+  /*uint32_t adc;
   uint32_t wake_up_counter;  
   uint8_t error_code;
-  uint8_t error_count;
-} payload_struct_t;
+  uint8_t error_count;*/
+  uint8_t data[MAX_RADIO_PAYLOAD_SIZE];
+} __attribute__((packed)) payload_struct_t;
+
+
+
+void put_uint32(payload_struct_t *payload, uint32_t value){
+  if(payload->size+sizeof(value) > MAX_RADIO_PAYLOAD_SIZE)  {
+    return;
+  }
+  memcpy(&payload->data[payload->size], &value, sizeof(value));
+  payload->size += sizeof(value);
+}
+
+
+void put_uint8(payload_struct_t *payload, uint8_t value){
+  if(payload->size+sizeof(value) > MAX_RADIO_PAYLOAD_SIZE)  {
+    return;
+  }
+  memcpy(&payload->data[payload->size], &value, sizeof(value));
+  payload->size += sizeof(value);
+}
 
 
 int main(void)
@@ -171,9 +199,10 @@ int main(void)
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
-  payload_struct_t payload = {0};    
-  payload.error_code = 0xFF;
+  payload_struct_t payload = {0};      
   int rc;
+  uint8_t packet_counter = 0;//PID
+  uint32_t wake_up_counter = 0;
 
   //rc = send_packet((uint8_t*)&payload);
   //check_error(rc); 
@@ -190,29 +219,31 @@ int main(void)
 #ifdef BOARD_CONFIG_LED_SIGNAL
     led_on(BOARD_CONFIG_LED_PIN_1);
 #endif    
-    payload.wake_up_counter++;
-
-    //do some work
-    //nrf_delay_ms(10);
-    /*(g_rtc_wakeup) {
-      rc = adc_start();
-      if(rc!=NRFSE_OK) {
-        payload.error_code = rc;
-        payload.error_count++;        
-      }
-      rc = send_packet((uint8_t*)&payload);
-      check_error(rc);
-    }*/
+    wake_up_counter++;
 
     //check wake-up reason
     if(adc_is_adc_wakeup()){
       adc_reset_wakeup_marker();
-      //rc = send_packet((uint8_t*)&payload);
-      //check_error(rc); 
-      rc = adc_get_result(&payload.adc);    
-      payload.error_code = rc;
+
+      //build payload packet
+      packet_counter++;
+      packet_counter &= 0x03;
+
+      payload.pid = packet_counter;
+      payload.no_ack = 1;
+      payload.size = 0;
+      uint32_t adc;
+      
+      rc = adc_get_result(&adc);
+      put_uint32(&payload, adc);
+      put_uint32(&payload, wake_up_counter);      
+      put_uint8(&payload, rc);
+      put_uint8(&payload, 0);      
+
       rc = send_packet((uint8_t*)&payload);
       check_error(rc);       
     }    
   }
 }
+
+

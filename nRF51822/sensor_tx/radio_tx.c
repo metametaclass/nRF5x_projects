@@ -25,14 +25,39 @@
 #define RADIO_IRQ_PRIORITY 2
 
 
-/* These are set to zero as ShockBurst packets don't have corresponding fields. */
-#define PACKET_S1_FIELD_SIZE      (0UL)  /**< Packet S1 field size in bits. */
-#define PACKET_S0_FIELD_SIZE      (0UL)  /**< Packet S0 field size in bits. */
-#define PACKET_LENGTH_FIELD_SIZE  (0UL)  /**< Packet length field size in bits. */
+/*
+// These are set to zero as ShockBurst packets don't have corresponding fields. 
+// Packet S1 field size in bits.
+#define PACKET_S1_FIELD_SIZE      (0UL)  
+// Packet S0 field size in bits.
+#define PACKET_S0_FIELD_SIZE      (0UL)  
+// Packet length field size in bits.
+#define PACKET_LENGTH_FIELD_SIZE  (0UL)  
 
-#define PACKET_BASE_ADDRESS_LENGTH  (4UL)                   //!< Packet base address length field size in bytes
-#define PACKET_STATIC_LENGTH        (10UL)                   //!< Packet static length in bytes
-#define PACKET_PAYLOAD_MAXSIZE      (PACKET_STATIC_LENGTH)  //!< Packet payload maximum size in bytes
+// Packet base address length field size in bytes
+#define PACKET_BASE_ADDRESS_LENGTH  (4UL)                   
+// Packet static length in bytes
+#define PACKET_STATIC_LENGTH        (10UL)                   
+// Packet payload maximum size in bytes
+#define PACKET_PAYLOAD_MAXSIZE      (PACKET_STATIC_LENGTH)  
+*/
+
+
+// ESB values
+// Packet S1 field size in bits. 
+#define PACKET_S1_FIELD_SIZE      (3UL)  
+// Packet S0 field size in bits. 
+#define PACKET_S0_FIELD_SIZE      (0UL)  
+// Packet length field size in bits.  
+#define PACKET_LENGTH_FIELD_SIZE  (6UL)  
+
+// Packet base address length field size in bytes
+#define PACKET_BASE_ADDRESS_LENGTH  (4UL)                   
+// Packet static length in bytes
+#define PACKET_STATIC_LENGTH        (0UL)   
+// Packet payload maximum size in bytes                
+#define PACKET_PAYLOAD_MAXSIZE      MAX_RADIO_PAYLOAD_SIZE
+
 
 
 #ifdef USE_NRF_EXAMPLE_RF_SETUP

@@ -6,6 +6,9 @@
 
 #include "bit_swap.h"
 
+
+#define MAX_RADIO_PAYLOAD_SIZE (32UL)
+
 void radio_initialization();
 
 
