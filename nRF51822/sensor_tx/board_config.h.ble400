@@ -1,0 +1,15 @@
+#ifndef BOARD_CONFIG_H
+#define BOARD_CONFIG_H
+
+#define BOARD_CONFIG_LED_PIN_0 18
+#define BOARD_CONFIG_LED_PIN_1 19
+#define BOARD_CONFIG_LED_PIN_2 20
+
+//use if leds connected to Vcc
+//#define BOARD_CONFIG_LED_ACTIVE_LOW
+
+#define USE_NRF_EXAMPLE_RF_SETUP
+
+#define BOARD_CONFIG_SEND_INTERVAL 5
+
+#endif
