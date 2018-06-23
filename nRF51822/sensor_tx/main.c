@@ -60,31 +60,36 @@ void POWER_CLOCK_IRQHandler(void){
 }
 
 
-void clock_initialization()
-{
-  //nrf_drv_common_irq_enable(POWER_CLOCK_IRQn, CLOCK_CONFIG_IRQ_PRIORITY);
+//nRF5_SDK_12.3.0\examples\peripheral\rtc\main.c
 
+static void hf_clock_initialization() {
+  //HFCLK consumes 1 mA and started only for read/send cycle
+
+  /*
   //enable HF and LF start interrupts
-  //NRF_CLOCK->INTENSET = (CLOCK_INTENSET_LFCLKSTARTED_Enabled << CLOCK_INTENSET_LFCLKSTARTED_Pos);
-  //nrf_clock_int_enable(NRF_CLOCK_INT_HF_STARTED_MASK | NRF_CLOCK_INT_LF_STARTED_MASK);
+  NRF_CLOCK->INTENSET = (CLOCK_INTENSET_LFCLKSTARTED_Enabled << CLOCK_INTENSET_LFCLKSTARTED_Pos);
+  nrf_clock_int_enable(NRF_CLOCK_INT_HF_STARTED_MASK | NRF_CLOCK_INT_LF_STARTED_MASK);
 
-  /* Start 16 MHz crystal oscillator */
-
+  // Start 16 MHz crystal oscillator 
   //NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
   nrf_clock_event_clear(NRF_CLOCK_EVENT_HFCLKSTARTED);
 
   //NRF_CLOCK->TASKS_HFCLKSTART    = 1;
-  //nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTART);
+  nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTART);
 
-  /* Wait for the external oscillator to start up */
-  //while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
-  //{
+  // Wait for the external oscillator to start up 
+  while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
+  {
     
-  //}
+  }*/
+}
 
-    /* Start low frequency crystal oscillator for RTC*/
-  
 
+void lf_clock_initialization()
+{
+  //nrf_drv_common_irq_enable(POWER_CLOCK_IRQn, CLOCK_CONFIG_IRQ_PRIORITY);
+
+  // Start low frequency crystal oscillator for RTC
   //NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;  
   nrf_clock_event_clear(NRF_CLOCK_EVENT_LFCLKSTARTED);
 
@@ -92,13 +97,11 @@ void clock_initialization()
   nrf_clock_task_trigger(NRF_CLOCK_TASK_LFCLKSTART);
 
 
-  while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0)
-  {  
+  while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0) {  
     
   }
 }
 
-//nRF5_SDK_12.3.0\examples\peripheral\rtc\main.c
 
 
 void check_error(int rc){
@@ -117,20 +120,21 @@ void ppi_init(){
   //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].EEP = (uint32_t)&NRF_RTC0->EVENTS_COMPARE[0];
   //NRF_PPI->CH[RTC0_TO_ADC_CHANNEL].TEP = (uint32_t)&NRF_ADC->TASKS_START;
   //NRF_PPI->CHENSET = (1 << RTC0_TO_ADC_CHANNEL);
-  
+
+  //start HFCLK on RTC0 COMPARE0
   nrf_ppi_channel_endpoint_setup(
     RTC0_TO_HFCLK_CHANNEL,
     nrf_rtc_event_address_get(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0),
     nrf_clock_task_address_get(NRF_CLOCK_TASK_HFCLKSTART)
   );
+  nrf_ppi_channel_enable(RTC0_TO_HFCLK_CHANNEL);
 
+  //start ADC on HFCLK start event
   nrf_ppi_channel_endpoint_setup(
     HFCLK_TO_ADC_CHANNEL,
     nrf_clock_event_address_get(NRF_CLOCK_EVENT_HFCLKSTARTED),
     nrf_adc_task_address_get(NRF_ADC_TASK_START)
-  );
-
-  nrf_ppi_channel_enable(RTC0_TO_HFCLK_CHANNEL);
+  );  
   nrf_ppi_channel_enable(HFCLK_TO_ADC_CHANNEL);
   
 }
@@ -145,7 +149,9 @@ typedef struct payload_struct_s {
 
 int main(void)
 {
-  clock_initialization();
+  hf_clock_initialization();
+
+  lf_clock_initialization();
 
   radio_initialization();
 
@@ -155,7 +161,8 @@ int main(void)
 
   led_pin_init();
 
-  //NRF_POWER->TASKS_CONSTLAT = 1;//TODO: replace with LOWPWR (default value)
+  //use LOWPWR (default value)
+  //NRF_POWER->TASKS_CONSTLAT = 1;
 
   rtc_init(); 
     
@@ -176,13 +183,13 @@ int main(void)
     //reset marker
     //g_rtc_wakeup = 0;
     //adc_reset_wakeup_marker();    
-    led_off(BOARD_CONFIG_LED_PIN_0);
-    led_off(BOARD_CONFIG_LED_PIN_1);
-    led_off(BOARD_CONFIG_LED_PIN_2);
+    led_all_off();
     __SEV();
     __WFE();
     __WFE();
-    //led_on(BOARD_CONFIG_LED_PIN_1);
+#ifdef BOARD_CONFIG_LED_SIGNAL
+    led_on(BOARD_CONFIG_LED_PIN_1);
+#endif    
     payload.wake_up_counter++;
 
     //do some work
@@ -196,6 +203,8 @@ int main(void)
       rc = send_packet((uint8_t*)&payload);
       check_error(rc);
     }*/
+
+    //check wake-up reason
     if(adc_is_adc_wakeup()){
       adc_reset_wakeup_marker();
       //rc = send_packet((uint8_t*)&payload);

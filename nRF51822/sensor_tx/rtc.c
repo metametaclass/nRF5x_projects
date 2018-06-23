@@ -55,13 +55,17 @@ void rtc_schedule_next_event(){
   nrf_rtc_cc_set(NRF_RTC0, 0, val);
 }
 
+//irq not used, RTC COMPARE0 event starts HFCLK through PPI
 
+/*
 volatile uint32_t g_counter;
 volatile uint32_t g_rtc_wakeup;
 
 void RTC0_IRQHandler(void)
 {
   //from nrf_drv_rtc handler, why so complex?
+
+
   if( nrf_rtc_int_is_enabled(NRF_RTC0, NRF_RTC_INT_TICK_MASK) &&
       nrf_rtc_event_pending (NRF_RTC0, NRF_RTC_EVENT_TICK)) {
     nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_TICK);
@@ -74,7 +78,7 @@ void RTC0_IRQHandler(void)
     //reset event
     nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);    
 
-    //set new value    
+    //set new value
     g_counter = nrf_rtc_counter_get(NRF_RTC0);//copy counter
     g_rtc_wakeup = 1;//wake up marker
     rtc_schedule_next_event();
@@ -83,3 +87,4 @@ void RTC0_IRQHandler(void)
   }
 
 }
+*/

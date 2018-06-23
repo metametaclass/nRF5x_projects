@@ -12,4 +12,7 @@
 
 #define BOARD_CONFIG_SEND_INTERVAL 5
 
+//enable led blink on wake up event
+#define BOARD_CONFIG_LED_SIGNAL
+
 #endif

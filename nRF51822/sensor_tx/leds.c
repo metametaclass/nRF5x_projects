@@ -21,6 +21,12 @@ void led_off(uint32_t gpio){
 #endif
 }
 
+void led_all_off(){
+  led_off(BOARD_CONFIG_LED_PIN_0);
+  led_off(BOARD_CONFIG_LED_PIN_1);
+  led_off(BOARD_CONFIG_LED_PIN_2); 
+}
+
 void led_pin_init(){
   nrf_gpio_cfg_output(BOARD_CONFIG_LED_PIN_0);
   led_off(BOARD_CONFIG_LED_PIN_0);
