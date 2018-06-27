@@ -15,4 +15,6 @@
 //enable led blink on wake up event
 #define BOARD_CONFIG_LED_SIGNAL
 
+#define ONE_WIRE_PIN 7
+
 #endif

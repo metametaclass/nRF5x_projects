@@ -35,6 +35,8 @@
 //battery measurement
 #include "adc.h"
 
+//1-wire 
+#include "ow.h"
 
 //error codes
 #include "nrfs_errors.h"
@@ -42,7 +44,7 @@
 //radio transmitter
 #include "radio_tx.h"
 
-//payload packey structure
+//payload packet structure
 #include "payload.h"
 
 #define CLOCK_CONFIG_IRQ_PRIORITY 2
@@ -160,6 +162,8 @@ int main(void)
 
   led_pin_init();
 
+  onewire_init();
+
   //use LOWPWR (default value)
   //NRF_POWER->TASKS_CONSTLAT = 1;
 
@@ -167,6 +171,7 @@ int main(void)
     
   led_on(BOARD_CONFIG_LED_PIN_0);
   nrf_delay_ms(250);
+  int one_wire = onewire_reset();
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
@@ -226,6 +231,9 @@ int main(void)
       put_uint8(&payload, wake_up_counter);      */
       put_uint8(&payload, SENSOR_TYPE_WAKEUP);//well-known sensor type
       put_uint8(&payload, wake_up_counter);
+
+      put_uint8(&payload, SENSOR_TYPE_DEBUG);//well-known sensor type
+      put_uint8(&payload, one_wire);
 
       rc = send_packet((uint8_t*)&payload);
       check_error(rc);       

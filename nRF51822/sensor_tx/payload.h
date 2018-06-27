@@ -10,6 +10,8 @@
 
 #define SENSOR_TYPE_WAKEUP 0x00
 #define SENSOR_TYPE_BATTERY 0x10
+#define SENSOR_TYPE_DEBUG 0x20
+
 
 #define SENSOR_TYPE_ERRORS 0xB0
 #define SENSOR_TYPE_u8u8 0x00
@@ -17,6 +19,7 @@
 
 #define SENSOR_WAKEUP 0
 #define SENSOR_ADC_BATTERY 1
+#define SENSOR_DEBUG 2
 
 typedef struct payload_struct_s {
   uint8_t size;  
