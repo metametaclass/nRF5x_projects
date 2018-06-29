@@ -151,12 +151,12 @@ int ds18b20_after_rom(bool check_crc){
   }
   g_ow_rom_readed = true;
 
-  /*if(!g_ow_has_temperature){
+  if(!g_ow_has_temperature){
+    //debug_pin_set();
     g_ds18b20_state = DS18B20_STATE_CONVERT_T_COMMAND;
-    //g_ow_state = OW_STATE_WAITING;
     onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_CONVERT_T);  
     return OW_TIMER_CONTINUE;
-  }*/
+  }
   g_ds18b20_state = DS18B20_STATE_READ_SCRATCHPAD_COMMAND;
   onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD);
   return OW_TIMER_CONTINUE;  
@@ -194,25 +194,27 @@ int onewire_process_byte(uint8_t read_result) {
       return ds18b20_after_rom(true);
 
     case DS18B20_STATE_CONVERT_T_COMMAND:
-      //wait for conversion
+      //wait for conversion      
       g_wait_count = 0;
       g_ds18b20_state = DS18B20_STATE_CONVERTING;
       onewire_goto_exch_byte(0xFF);
       return OW_TIMER_CONTINUE;
     
-    case DS18B20_STATE_CONVERTING:    
+    case DS18B20_STATE_CONVERTING:          
       if(read_result!=0){//conversion finished
-        g_ow_has_temperature = true;
+        g_wait_count = 0;
+        //g_ow_has_temperature = true;
         g_ds18b20_state = DS18B20_STATE_READ_SCRATCHPAD_COMMAND;
         onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD);
         return OW_TIMER_CONTINUE;
       }
       g_wait_count++;
-      if(g_wait_count>3){
+      if(g_wait_count>3000){
+        //debug_pin_clear();
         onewire_goto_error(ONE_WIRE_ERROR_CONVERSION_TIMEOUT);
         return OW_TIMER_STOP;
       }
-
+      onewire_goto_exch_byte(0xFF);
       return OW_TIMER_CONTINUE;
 
   
@@ -235,12 +237,12 @@ int onewire_process_byte(uint8_t read_result) {
       crc8 = calc_crc8_1wire((void*)(g_ow_result+8), 9);
       if(crc8==0){        
         //start next conversion
-        g_ds18b20_state = DS18B20_STATE_CONVERT_T_COMMAND_NO_WAIT;
-        onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_CONVERT_T);  
-        return OW_TIMER_CONTINUE;
-        //g_ds18b20_state = DS18B20_STATE_FINISHED;
-        //g_ow_state = OW_STATE_FINISHED;        
-        //return OW_TIMER_STOP;
+        //g_ds18b20_state = DS18B20_STATE_CONVERT_T_COMMAND_NO_WAIT;
+        //onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_CONVERT_T);  
+        //return OW_TIMER_CONTINUE;
+        g_ds18b20_state = DS18B20_STATE_FINISHED;
+        g_ow_state = OW_STATE_FINISHED;        
+        return OW_TIMER_STOP;
 
       }
       onewire_goto_error(ONE_WIRE_ERROR_INVALID_CRC);

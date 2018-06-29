@@ -24,7 +24,7 @@
 //invalid CRC in ds18b20 ROM or RAM 
 #define ONE_WIRE_ERROR_INVALID_CRC 8
 
-//waiting T conversion more than 3 byte read time
+//waiting T conversion more than 
 #define ONE_WIRE_ERROR_CONVERSION_TIMEOUT 9
 
 //too fast compare event

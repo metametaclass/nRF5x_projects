@@ -26,7 +26,7 @@
 //#define SENSOR_ID_WAKEUP 0
 #define SENSOR_ID_ADC_BATTERY 1
 //#define SENSOR_ID_DEBUG 2
-//#define SENSOR_ID_DS18B20 3
+#define SENSOR_ID_DS18B20 3
 
 
 typedef struct payload_struct_s {

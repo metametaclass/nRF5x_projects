@@ -164,6 +164,8 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
 
   payload->no_ack = 1;
   payload->size = 0;
+  uint8_t errors[32];
+  uint8_t error_count = 0;
   
 
   put_uint8(payload, PROTOCOL_VERSION_1);
@@ -173,9 +175,12 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
   rc = adc_get_result(&adc);
   
   if(rc){
-    put_uint8(payload, SENSOR_TYPE_ERRORS | 1); //type:B, count:1  
-    put_uint8(payload, SENSOR_ID_ADC_BATTERY);
-    put_uint8(payload, (uint8_t)rc);
+    errors[2*error_count] = SENSOR_ID_ADC_BATTERY;
+    errors[2*error_count+1] = rc;
+    error_count++;
+    //put_uint8(payload, SENSOR_TYPE_ERRORS | 1); //type:B, count:1  
+    //put_uint8(payload, SENSOR_ID_ADC_BATTERY);
+    //put_uint8(payload, (uint8_t)rc);
   }else{
     //put_uint8(payload, SENSOR_TYPE_u8u16 | 1); //type:1, count:1
     //put_uint8(payload, SENSOR_ADC_BATTERY);
@@ -189,10 +194,14 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
   put_uint8(payload, SENSOR_TYPE_WAKEUP);//well-known sensor type
   put_uint8(payload, ctx->wake_up_counter & 0xFF);
 
-  put_uint8(payload, SENSOR_TYPE_DEBUG);//well-known sensor type
-  put_uint8(payload, ctx->one_wire_error);  
-  
-  if(ctx->one_wire_error==0){
+  //put_uint8(payload, SENSOR_TYPE_DEBUG);//well-known sensor type
+  //put_uint8(payload, ctx->one_wire_error);  
+
+  if(ctx->one_wire_error!=0){
+    errors[2*error_count] = SENSOR_ID_DS18B20;
+    errors[2*error_count+1] = ctx->one_wire_error;
+    error_count++;    
+  } else {
     put_uint8(payload, SENSOR_TYPE_DS18B20);
     put_uint8_array(payload, ctx->onewire_rom, 8);
     put_uint16(payload, ctx->onewire_rom[8]+(ctx->onewire_rom[9]<<8));
@@ -200,6 +209,14 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
     //scratchpad
     put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 5);
     put_uint8_array(payload, ctx->onewire_rom+8, 5);
+  }
+  if (error_count>0) {
+    //type:B, count:error_count 
+    put_uint8(payload, SENSOR_TYPE_ERRORS | error_count); 
+    for(int i=0;i<error_count*2;i++){
+      //put id, error
+      put_uint8(payload, errors[i]);      
+    }
   }
   return 0;
 }
