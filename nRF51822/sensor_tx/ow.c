@@ -32,14 +32,17 @@ typedef enum {
   DS18B20_STATE_RESETTING,
   DS18B20_STATE_READ_ROM_COMMAND,
   DS18B20_STATE_READING_ROM,
+  DS18B20_STATE_READ_SCRATCHPAD_COMMAND,
+  DS18B20_STATE_READING_SCRATCHPAD,
   DS18B20_STATE_FINISHED,
   DS18B20_STATE_ERROR
 } ds18b20_state_t;
 
 
 #define ONE_WIRE_COMMAND_READ_ROM 0x33
+#define ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD 0xBE
 
-#define OW_MAX_RESULT_SIZE 16
+#define OW_MAX_RESULT_SIZE 32
 
 static volatile int g_ow_last_error = 0;
 static volatile onewire_state_t g_ow_state = OW_STATE_IDLE;
@@ -116,6 +119,7 @@ void onewire_goto_exch_byte(uint8_t to_write) {
 
 //process 1-wire byte exchange result
 int onewire_process_byte(uint8_t read_result) {
+
   switch(g_ds18b20_state){
     case DS18B20_STATE_READ_ROM_COMMAND:
       g_ds18b20_state = DS18B20_STATE_READING_ROM;
@@ -129,19 +133,48 @@ int onewire_process_byte(uint8_t read_result) {
       }
       g_ow_result[g_ow_idx] = read_result;
       g_ow_idx++;
-      if(g_ow_idx==8){
-        
-        uint8_t crc8 = calc_crc8_1wire((void*)g_ow_result, 8);
-        if(crc8==0){
-          g_ds18b20_state = DS18B20_STATE_FINISHED;
-          g_ow_state = OW_STATE_FINISHED;        
-        }else{
-          onewire_goto_error(ONE_WIRE_CRC_ERROR);
-        }        
-        return OW_TIMER_STOP;
+      if(g_ow_idx<8){
+        onewire_goto_exch_byte(0xFF);
+        return OW_TIMER_CONTINUE;
       }
+        
+      uint8_t crc8 = calc_crc8_1wire((void*)g_ow_result, 8);
+      if(crc8==0){
+        //g_ds18b20_state = DS18B20_STATE_FINISHED;
+        //g_ow_state = OW_STATE_FINISHED;        
+         
+        g_ds18b20_state = DS18B20_STATE_READ_SCRATCHPAD_COMMAND;
+        onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD);
+        return OW_TIMER_CONTINUE;
+      }
+      onewire_goto_error(ONE_WIRE_CRC_ERROR);
+      return OW_TIMER_STOP;
+                
+    case DS18B20_STATE_READ_SCRATCHPAD_COMMAND:
+      g_ds18b20_state = DS18B20_STATE_READING_SCRATCHPAD;      
       onewire_goto_exch_byte(0xFF);
       return OW_TIMER_CONTINUE;
+
+    case DS18B20_STATE_READING_SCRATCHPAD:
+      if(g_ow_idx>OW_MAX_RESULT_SIZE){
+        onewire_goto_error(ONE_WIRE_ERROR_TOO_LARGE_DATA);  
+        return OW_TIMER_STOP;
+      }
+      g_ow_result[g_ow_idx] = read_result;
+      g_ow_idx++;
+      if(g_ow_idx<17){
+        onewire_goto_exch_byte(0xFF);
+        return OW_TIMER_CONTINUE;
+      }
+      crc8 = calc_crc8_1wire((void*)(g_ow_result+8), 9);
+      if(crc8==0){
+        g_ds18b20_state = DS18B20_STATE_FINISHED;
+        g_ow_state = OW_STATE_FINISHED;        
+
+        return OW_TIMER_STOP;
+      }
+      onewire_goto_error(ONE_WIRE_CRC_ERROR);
+      return OW_TIMER_STOP;      
     default:
       onewire_goto_error(ONE_WIRE_ERROR_INVALID_DS18B20_STATE);
       return OW_TIMER_STOP;
@@ -158,7 +191,7 @@ int onewire_next_state_inner(int sample){
         return OW_TIMER_STOP;
       }
       g_ds18b20_state = DS18B20_STATE_READ_ROM_COMMAND;
-      onewire_goto_exch_byte(ONE_WIRE_COMMAND_READ_ROM);      
+      onewire_goto_exch_byte(ONE_WIRE_COMMAND_READ_ROM);
       return OW_TIMER_CONTINUE;
     case OW_STATE_EXCH_BYTE:      
       g_ow_read >>= 1;

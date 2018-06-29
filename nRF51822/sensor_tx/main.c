@@ -174,7 +174,7 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
   
   if(rc){
     put_uint8(payload, SENSOR_TYPE_ERRORS | 1); //type:B, count:1  
-    put_uint8(payload, SENSOR_ADC_BATTERY);
+    put_uint8(payload, SENSOR_ID_ADC_BATTERY);
     put_uint8(payload, (uint8_t)rc);
   }else{
     //put_uint8(payload, SENSOR_TYPE_u8u16 | 1); //type:1, count:1
@@ -195,7 +195,11 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
   if(ctx->one_wire_error==0){
     put_uint8(payload, SENSOR_TYPE_DS18B20);
     put_uint8_array(payload, ctx->onewire_rom, 8);
-    put_uint16(payload, 0);
+    put_uint16(payload, ctx->onewire_rom[8]+(ctx->onewire_rom[9]<<8));
+
+    //scratchpad
+    put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 5);
+    put_uint8_array(payload, ctx->onewire_rom+8, 5);
   }
   return 0;
 }
@@ -255,7 +259,7 @@ int main(void)
       continue;//
     }
     int real_len = 0;
-    rc = onewire_read_result(ctx.onewire_rom, 8, &real_len);
+    rc = onewire_read_result(ctx.onewire_rom, sizeof(ctx.onewire_rom), &real_len);
     if(rc==ONE_WIRE_ERROR_BUSY){
       continue;
     }

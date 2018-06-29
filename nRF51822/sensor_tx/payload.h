@@ -8,20 +8,25 @@
 
 #define PROTOCOL_VERSION_1 1
 
+//well-known sensor types with 0 length field
 #define SENSOR_TYPE_WAKEUP 0x00
 #define SENSOR_TYPE_BATTERY 0x10
 #define SENSOR_TYPE_DEBUG 0x20
 #define SENSOR_TYPE_DS18B20 0x30
 
+//high 4 bits of sensor type
+//lower 4 bits - sensor data count
 
-#define SENSOR_TYPE_ERRORS 0xB0
 #define SENSOR_TYPE_u8u8 0x00
-#define SENSOR_TYPE_u8u16 0x01
+#define SENSOR_TYPE_u8u16 0x10
+#define SENSOR_TYPE_ERRORS 0xB0
+#define SENSOR_TYPE_BYTE_ARRAY 0xE0
 
-#define SENSOR_WAKEUP 0
-#define SENSOR_ADC_BATTERY 1
-#define SENSOR_DEBUG 2
-#define SENSOR_DS18B20 3
+
+//#define SENSOR_ID_WAKEUP 0
+#define SENSOR_ID_ADC_BATTERY 1
+//#define SENSOR_ID_DEBUG 2
+//#define SENSOR_ID_DS18B20 3
 
 
 typedef struct payload_struct_s {
