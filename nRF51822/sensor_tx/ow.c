@@ -2,7 +2,7 @@
 
 #include "nrf_gpio.h"
 
-//#include "stdbool.h"
+#include "stdbool.h"
 
 #include "ow.h"
 
@@ -30,16 +30,29 @@ typedef enum {
 typedef enum {  
   DS18B20_STATE_IDLE,
   DS18B20_STATE_RESETTING,
-  DS18B20_STATE_READ_ROM_COMMAND,
+
+  DS18B20_STATE_READ_ROM_COMMAND,  
   DS18B20_STATE_READING_ROM,
+
+  DS18B20_STATE_SKIP_ROM_COMMAND,
+
   DS18B20_STATE_READ_SCRATCHPAD_COMMAND,
   DS18B20_STATE_READING_SCRATCHPAD,
+
+  DS18B20_STATE_CONVERT_T_COMMAND_NO_WAIT,
+
+  DS18B20_STATE_CONVERT_T_COMMAND,
+  DS18B20_STATE_CONVERTING,
+
   DS18B20_STATE_FINISHED,
   DS18B20_STATE_ERROR
 } ds18b20_state_t;
 
 
 #define ONE_WIRE_COMMAND_READ_ROM 0x33
+#define ONE_WIRE_COMMAND_SKIP_ROM 0xCC
+
+#define ONE_WIRE_COMMAND_DS18B20_CONVERT_T 0x44
 #define ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD 0xBE
 
 #define OW_MAX_RESULT_SIZE 32
@@ -54,6 +67,10 @@ static volatile uint8_t g_ow_read = 0xFF;
 
 static volatile int g_ow_idx;
 static volatile uint8_t g_ow_result[OW_MAX_RESULT_SIZE];
+static volatile int g_wait_count = 0;
+
+static volatile bool g_ow_rom_readed = false;
+static volatile bool g_ow_has_temperature = false;
 
 
 void onewire_init(){  
@@ -69,6 +86,8 @@ void onewire_init(){
   NVIC_SetPriority(TIMER1_IRQn, 1);
   NVIC_EnableIRQ(TIMER1_IRQn);
 
+  //shorts working TOO fast, faster then FSM event processing code and cause CC0 event to 
+
   //clear timer on compare3 (stop will be processed by irq handler if needed)
   //NRF_TIMER1->SHORTS = TIMER_SHORTS_COMPARE3_STOP_Msk |  TIMER_SHORTS_COMPARE3_CLEAR_Msk;
 
@@ -78,20 +97,17 @@ void onewire_init(){
 }
 
 
-//need stop?
-//need shutdown?
-//need new timings?
-
-/*typedef struct ow_timer_settings_s {
-  int shutdown;
-  int compare0;
-} ow_timer_settings_t;*/
-
 #define OW_TIMER_CONTINUE 0
 #define OW_TIMER_STOP 1 
 
 void onewire_goto_error(int error) {
-  g_ow_last_error = error;
+  if( (error == ONE_WIRE_ERROR_NO_DEVICES) 
+      || (error == ONE_WIRE_ERROR_INVALID_CRC) 
+     ) {
+    g_ow_rom_readed = false;
+    g_ow_has_temperature = false;
+  }
+  g_ow_last_error = error;  
   g_ow_state = OW_STATE_ERROR;
   g_ds18b20_state = DS18B20_STATE_ERROR;  
 }
@@ -117,39 +133,89 @@ void onewire_goto_exch_byte(uint8_t to_write) {
   onewire_start_send_bit(g_ow_write & 1);
 }
 
+//process Read ROM command byte exchange finish event
+int ds18b20_fsm_process_read_rom_command(){
+  g_ds18b20_state = DS18B20_STATE_READING_ROM;
+  g_ow_idx = 0;
+  onewire_goto_exch_byte(0xFF);
+  return OW_TIMER_CONTINUE;
+}
+
+int ds18b20_after_rom(bool check_crc){
+  if(check_crc) {
+    uint8_t crc8 = calc_crc8_1wire((void*)g_ow_result, 8);
+    if(crc8!=0){
+      onewire_goto_error(ONE_WIRE_ERROR_INVALID_CRC);
+      return OW_TIMER_STOP;
+    }
+  }
+  g_ow_rom_readed = true;
+
+  /*if(!g_ow_has_temperature){
+    g_ds18b20_state = DS18B20_STATE_CONVERT_T_COMMAND;
+    //g_ow_state = OW_STATE_WAITING;
+    onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_CONVERT_T);  
+    return OW_TIMER_CONTINUE;
+  }*/
+  g_ds18b20_state = DS18B20_STATE_READ_SCRATCHPAD_COMMAND;
+  onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD);
+  return OW_TIMER_CONTINUE;  
+}
+
+//process readed ROM byte
+int ds18b20_fsm_process_reading_rom(uint8_t read_result){
+  if(g_ow_idx>OW_MAX_RESULT_SIZE){
+    onewire_goto_error(ONE_WIRE_ERROR_TOO_LARGE_DATA);  
+    return OW_TIMER_STOP;
+  }
+  g_ow_result[g_ow_idx] = read_result;
+  g_ow_idx++;
+  if(g_ow_idx<8){
+    onewire_goto_exch_byte(0xFF);
+    return OW_TIMER_CONTINUE;
+  }
+        
+  return ds18b20_after_rom(true);
+}
+
 //process 1-wire byte exchange result
 int onewire_process_byte(uint8_t read_result) {
+  uint8_t crc8;
 
   switch(g_ds18b20_state){
     case DS18B20_STATE_READ_ROM_COMMAND:
-      g_ds18b20_state = DS18B20_STATE_READING_ROM;
-      g_ow_idx = 0;
+      return ds18b20_fsm_process_read_rom_command();      
+
+    case DS18B20_STATE_READING_ROM:
+      return ds18b20_fsm_process_reading_rom(read_result);
+
+    case DS18B20_STATE_SKIP_ROM_COMMAND:
+      g_ow_idx = 8;//skip already known ROM          
+      return ds18b20_after_rom(true);
+
+    case DS18B20_STATE_CONVERT_T_COMMAND:
+      //wait for conversion
+      g_wait_count = 0;
+      g_ds18b20_state = DS18B20_STATE_CONVERTING;
       onewire_goto_exch_byte(0xFF);
       return OW_TIMER_CONTINUE;
-    case DS18B20_STATE_READING_ROM:
-      if(g_ow_idx>OW_MAX_RESULT_SIZE){
-        onewire_goto_error(ONE_WIRE_ERROR_TOO_LARGE_DATA);  
-        return OW_TIMER_STOP;
-      }
-      g_ow_result[g_ow_idx] = read_result;
-      g_ow_idx++;
-      if(g_ow_idx<8){
-        onewire_goto_exch_byte(0xFF);
-        return OW_TIMER_CONTINUE;
-      }
-        
-      uint8_t crc8 = calc_crc8_1wire((void*)g_ow_result, 8);
-      if(crc8==0){
-        //g_ds18b20_state = DS18B20_STATE_FINISHED;
-        //g_ow_state = OW_STATE_FINISHED;        
-         
+    
+    case DS18B20_STATE_CONVERTING:    
+      if(read_result!=0){//conversion finished
+        g_ow_has_temperature = true;
         g_ds18b20_state = DS18B20_STATE_READ_SCRATCHPAD_COMMAND;
         onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_READ_SCRATCHPAD);
         return OW_TIMER_CONTINUE;
       }
-      onewire_goto_error(ONE_WIRE_CRC_ERROR);
-      return OW_TIMER_STOP;
-                
+      g_wait_count++;
+      if(g_wait_count>3){
+        onewire_goto_error(ONE_WIRE_ERROR_CONVERSION_TIMEOUT);
+        return OW_TIMER_STOP;
+      }
+
+      return OW_TIMER_CONTINUE;
+
+  
     case DS18B20_STATE_READ_SCRATCHPAD_COMMAND:
       g_ds18b20_state = DS18B20_STATE_READING_SCRATCHPAD;      
       onewire_goto_exch_byte(0xFF);
@@ -167,14 +233,29 @@ int onewire_process_byte(uint8_t read_result) {
         return OW_TIMER_CONTINUE;
       }
       crc8 = calc_crc8_1wire((void*)(g_ow_result+8), 9);
-      if(crc8==0){
-        g_ds18b20_state = DS18B20_STATE_FINISHED;
-        g_ow_state = OW_STATE_FINISHED;        
+      if(crc8==0){        
+        //start next conversion
+        g_ds18b20_state = DS18B20_STATE_CONVERT_T_COMMAND_NO_WAIT;
+        onewire_goto_exch_byte(ONE_WIRE_COMMAND_DS18B20_CONVERT_T);  
+        return OW_TIMER_CONTINUE;
+        //g_ds18b20_state = DS18B20_STATE_FINISHED;
+        //g_ow_state = OW_STATE_FINISHED;        
+        //return OW_TIMER_STOP;
 
-        return OW_TIMER_STOP;
       }
-      onewire_goto_error(ONE_WIRE_CRC_ERROR);
+      onewire_goto_error(ONE_WIRE_ERROR_INVALID_CRC);
       return OW_TIMER_STOP;      
+    case DS18B20_STATE_CONVERT_T_COMMAND_NO_WAIT:
+      /*if(!g_ow_has_temperature){
+          //onewire_goto_error(ONEWIRE_ERROR_NO_TEMPERATURE);                  
+          //invalid data marker?
+          g_ow_result[8] = 0xFF;
+          g_ow_result[9] = 0xFF;
+      }*/
+      //conversion command issued, do not wait for result?
+      g_ds18b20_state = DS18B20_STATE_FINISHED;
+      g_ow_state = OW_STATE_FINISHED;        
+      return OW_TIMER_STOP;
     default:
       onewire_goto_error(ONE_WIRE_ERROR_INVALID_DS18B20_STATE);
       return OW_TIMER_STOP;
@@ -187,11 +268,16 @@ int onewire_next_state_inner(int sample){
   switch(g_ow_state){
     case OW_STATE_RESETTING:
       if(sample){
-        onewire_goto_error(ONE_WIRE_ERROR_NO_DEVICES);
+        onewire_goto_error(ONE_WIRE_ERROR_NO_DEVICES);        
         return OW_TIMER_STOP;
       }
-      g_ds18b20_state = DS18B20_STATE_READ_ROM_COMMAND;
-      onewire_goto_exch_byte(ONE_WIRE_COMMAND_READ_ROM);
+      if(g_ow_rom_readed) {
+        g_ds18b20_state = DS18B20_STATE_SKIP_ROM_COMMAND;
+        onewire_goto_exch_byte(ONE_WIRE_COMMAND_SKIP_ROM);
+      }else{
+        g_ds18b20_state = DS18B20_STATE_READ_ROM_COMMAND;
+        onewire_goto_exch_byte(ONE_WIRE_COMMAND_READ_ROM);
+      }      
       return OW_TIMER_CONTINUE;
     case OW_STATE_EXCH_BYTE:      
       g_ow_read >>= 1;
@@ -227,10 +313,14 @@ void onewire_next_state(int sample){
 volatile static int g_ow_sample = 0;
 
 void TIMER1_IRQHandler(void)
-{  
+{
   if (NRF_TIMER1->EVENTS_COMPARE[0]) {    
     NRF_TIMER1->EVENTS_COMPARE[0] = 0;
-    if(g_ow_state==OW_STATE_IDLE || g_ow_state==OW_STATE_FINISHED || g_ow_state ==OW_STATE_ERROR){
+    //TOO FAST
+    if(g_ow_state==OW_STATE_IDLE || g_ow_state==OW_STATE_FINISHED || g_ow_state==OW_STATE_ERROR){
+      onewire_goto_error(ONE_WIRE_ERROR_TOO_FAST_TIMER);
+      NRF_TIMER1->TASKS_STOP = 1;
+      NRF_TIMER1->TASKS_SHUTDOWN = 1;
       return;
     }
     NRF_GPIO->OUTCLR = (1 << BOARD_CONFIG_ONE_WIRE_PIN);
@@ -255,31 +345,6 @@ void TIMER1_IRQHandler(void)
 }
 
 
-/*
-int onewire_reset() {
-  sample = 1;
-
-  NRF_TIMER1->TASKS_CLEAR = 1;
-  NRF_TIMER1->CC[0] = 1;
-  NRF_TIMER1->CC[1] = 480*TICK_PER_US;
-  NRF_TIMER1->CC[2] = (480+70)*TICK_PER_US;
-  NRF_TIMER1->CC[3] = (480+480)*TICK_PER_US;
-
-
-  //running = true;
-  NRF_TIMER1->TASKS_START = 1;
-
-  while(running){
-    __SEV();
-    __WFE();
-    __WFE();
-  }
-
-  if (sample == 0)
-    return 1;
-
-  return 0;
-}*/
 
 void onewire_init_timings_reset(){
   NRF_TIMER1->CC[0] = 10;
@@ -335,7 +400,7 @@ int onewire_read_result(uint8_t *result, size_t len, int *real_len){
 
 
   if(g_ow_state == OW_STATE_ERROR) {
-    if(g_ow_last_error == ONE_WIRE_CRC_ERROR) {
+    if(g_ow_last_error == ONE_WIRE_ERROR_INVALID_CRC) {
       memcpy(result, (void*)g_ow_result, MIN(len, g_ow_idx));
       *real_len = MIN(len, g_ow_idx);
     }

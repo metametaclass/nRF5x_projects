@@ -1,13 +1,34 @@
 #pragma once
 
+//onewire_start called before previous poll finished
 #define ONE_WIRE_ERROR_NOT_IDLE 1
+
+//unknown FSM state
 #define ONE_WIRE_ERROR_INVALID_STATE 2
+
+//no RESET answer on 1-wire bus
 #define ONE_WIRE_ERROR_NO_DEVICES 3
+
+//polling not finished yet
 #define ONE_WIRE_ERROR_BUSY 4
-#define ONE_WIRE_ERROR_NOT_STARTED 5
+
+//onewire_read_result called when polling not started
+//#define ONE_WIRE_ERROR_NOT_STARTED 5
+
+//invalid high-level FSM state
 #define ONE_WIRE_ERROR_INVALID_DS18B20_STATE 6
+
+//too large read result
 #define ONE_WIRE_ERROR_TOO_LARGE_DATA 7
-#define ONE_WIRE_CRC_ERROR 8
+
+//invalid CRC in ds18b20 ROM or RAM 
+#define ONE_WIRE_ERROR_INVALID_CRC 8
+
+//waiting T conversion more than 3 byte read time
+#define ONE_WIRE_ERROR_CONVERSION_TIMEOUT 9
+
+//too fast compare event
+#define ONE_WIRE_ERROR_TOO_FAST_TIMER 10
 
 void onewire_init();
 
