@@ -208,8 +208,8 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
 
     //scratchpad
     //ctx->onewire_rom[13] = ctx->real_len;
-    put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 6);
-    put_uint8_array(payload, ctx->onewire_rom+8, 6);
+    //put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 6);
+    //put_uint8_array(payload, ctx->onewire_rom+8, 6);
   }
   if (error_count>0) {
     //type:B, count:error_count 
