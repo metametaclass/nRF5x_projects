@@ -43,6 +43,7 @@ void ADC_IRQHandler(void) {
   g_adc_wakeup = 1;
 }
 
+/*
 int adc_start() {
   //if(g_adc_finished == 1){
     //return NRFSE_BUSY;
@@ -52,6 +53,7 @@ int adc_start() {
   //nrf_adc_start();
   return NRFSE_OK;
 }
+*/
 
 int adc_get_result(uint32_t *result){
   uint32_t finished = g_adc_finished;

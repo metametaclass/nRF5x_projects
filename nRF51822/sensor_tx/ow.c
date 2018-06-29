@@ -77,3 +77,7 @@ int onewire_reset() {
   return 0;
 }
 
+
+void onewire_start(){
+  //start FSM
+}

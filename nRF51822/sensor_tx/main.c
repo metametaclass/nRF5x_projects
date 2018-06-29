@@ -47,6 +47,9 @@
 //payload packet structure
 #include "payload.h"
 
+//main working loop context structure type
+#include "main_context.h"
+
 #define CLOCK_CONFIG_IRQ_PRIORITY 2
 
 
@@ -110,9 +113,11 @@ void lf_clock_initialization()
 
 void check_error(int rc){
   if(rc!=NRFSE_OK){
+#ifdef BOARD_CONFIG_LED_SIGNAL    
     led_on(BOARD_CONFIG_LED_PIN_2);
     nrf_delay_ms(250);
     led_off(BOARD_CONFIG_LED_PIN_2);
+#endif    
   }
 }
 
@@ -139,12 +144,53 @@ void ppi_init(){
     nrf_clock_event_address_get(NRF_CLOCK_EVENT_HFCLKSTARTED),
     nrf_adc_task_address_get(NRF_ADC_TASK_START)
   );  
-  nrf_ppi_channel_enable(HFCLK_TO_ADC_CHANNEL);
-  
+  nrf_ppi_channel_enable(HFCLK_TO_ADC_CHANNEL); 
 }
 
 
+int fill_payload(payload_struct_t *payload, main_context_t *ctx){
+  int rc;
 
+  //build payload packet
+
+  //Packet IDentifier field
+  //ctx->packet_counter++;
+  //ctx->packet_counter &= 0x03;
+  //payload->pid = ctx->packet_counter;
+
+  payload->pid += 1;
+
+  payload->no_ack = 1;
+  payload->size = 0;
+  
+
+  put_uint8(payload, PROTOCOL_VERSION_1);
+  put_uint16(payload, (uint16_t) (NRF_FICR->DEVICEID[0]));
+
+  uint32_t adc;
+  rc = adc_get_result(&adc);
+  
+  if(rc){
+    put_uint8(payload, SENSOR_TYPE_ERRORS | 1); //type:B, count:1  
+    put_uint8(payload, SENSOR_ADC_BATTERY);
+    put_uint8(payload, (uint8_t)rc);
+  }else{
+    //put_uint8(payload, SENSOR_TYPE_u8u16 | 1); //type:1, count:1
+    //put_uint8(payload, SENSOR_ADC_BATTERY);
+    put_uint8(payload, SENSOR_TYPE_BATTERY);
+    put_uint16(payload, (uint16_t)adc);
+  }
+
+  /*put_uint8(payload, SENSOR_TYPE_u8u8 | 1) //type:0, count:1
+  put_uint8(payload, SENSOR_WAKEUP);
+  put_uint8(payload, wake_up_counter);      */
+  put_uint8(payload, SENSOR_TYPE_WAKEUP);//well-known sensor type
+  put_uint8(payload, ctx->wake_up_counter);
+
+  put_uint8(payload, SENSOR_TYPE_DEBUG);//well-known sensor type
+  put_uint8(payload, ctx->one_wire);
+  return 0;
+}
 
 
 
@@ -168,20 +214,18 @@ int main(void)
   //NRF_POWER->TASKS_CONSTLAT = 1;
 
   rtc_init(); 
+
+  payload_struct_t payload = {0};      
+  main_context_t ctx = {0};
     
   led_on(BOARD_CONFIG_LED_PIN_0);
   nrf_delay_ms(250);
-  int one_wire = onewire_reset();
+  ctx.one_wire = onewire_reset();
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
-  payload_struct_t payload = {0};      
+  
   int rc;
-  uint8_t packet_counter = 0;//PID
-  uint8_t wake_up_counter = 0;
-
-  //rc = send_packet((uint8_t*)&payload);
-  //check_error(rc); 
     
   while (true)
   {
@@ -195,48 +239,17 @@ int main(void)
 #ifdef BOARD_CONFIG_LED_SIGNAL
     led_on(BOARD_CONFIG_LED_PIN_1);
 #endif    
-    wake_up_counter++;
+    ctx.wake_up_counter++;
 
     //check wake-up reason
     if(adc_is_adc_wakeup()){
       adc_reset_wakeup_marker();
 
-      //build payload packet
-      packet_counter++;
-      packet_counter &= 0x03;
-
-      payload.pid = packet_counter;
-      payload.no_ack = 1;
-      payload.size = 0;
-      uint32_t adc;
-
-      put_uint8(&payload, PROTOCOL_VERSION_1);
-      put_uint16(&payload, (uint16_t) (NRF_FICR->DEVICEID[0]));
-
-      rc = adc_get_result(&adc);
-      
-      if(rc){
-        put_uint8(&payload, SENSOR_TYPE_ERRORS | 1); //type:B, count:1  
-        put_uint8(&payload, SENSOR_ADC_BATTERY);
-        put_uint8(&payload, (uint8_t)rc);
-      }else{
-        //put_uint8(&payload, SENSOR_TYPE_u8u16 | 1); //type:1, count:1
-        //put_uint8(&payload, SENSOR_ADC_BATTERY);
-        put_uint8(&payload, SENSOR_TYPE_BATTERY);
-        put_uint16(&payload, (uint16_t)adc);
-      }
-
-      /*put_uint8(&payload, SENSOR_TYPE_u8u8 | 1) //type:0, count:1
-      put_uint8(&payload, SENSOR_WAKEUP);
-      put_uint8(&payload, wake_up_counter);      */
-      put_uint8(&payload, SENSOR_TYPE_WAKEUP);//well-known sensor type
-      put_uint8(&payload, wake_up_counter);
-
-      put_uint8(&payload, SENSOR_TYPE_DEBUG);//well-known sensor type
-      put_uint8(&payload, one_wire);
+      rc = fill_payload(&payload, &ctx);
+      check_error(rc);
 
       rc = send_packet((uint8_t*)&payload);
-      check_error(rc);       
+      check_error(rc);
     }    
   }
 }
