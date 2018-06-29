@@ -207,8 +207,9 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
     put_uint16(payload, ctx->onewire_rom[8]+(ctx->onewire_rom[9]<<8));
 
     //scratchpad
-    put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 5);
-    put_uint8_array(payload, ctx->onewire_rom+8, 5);
+    //ctx->onewire_rom[13] = ctx->real_len;
+    put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 6);
+    put_uint8_array(payload, ctx->onewire_rom+8, 6);
   }
   if (error_count>0) {
     //type:B, count:error_count 
@@ -262,12 +263,16 @@ int main(void)
     //reset marker
     //g_rtc_wakeup = 0;
     //adc_reset_wakeup_marker();    
+#ifdef BOARD_CONFIG_LED_SIGNAL    
     led_all_off();
+    debug_pin_clear();
+#endif    
     __SEV();
     __WFE();
     __WFE();
 #ifdef BOARD_CONFIG_LED_SIGNAL
     led_on(BOARD_CONFIG_LED_PIN_1);
+    debug_pin_set();
 #endif    
     ctx.wake_up_counter++;
 
