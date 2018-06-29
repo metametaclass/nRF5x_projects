@@ -9,6 +9,9 @@
 //error codes
 #include "nrfs_errors.h"
 
+//start onewire
+#include "ow.h"
+
 #define ADC_IRQ_PRIORITY 2
 
 void adc_initialization(){
@@ -41,6 +44,7 @@ void ADC_IRQHandler(void) {
   g_adc_result = nrf_adc_result_get();
   g_adc_finished = 2;
   g_adc_wakeup = 1;
+  onewire_start();
 }
 
 /*

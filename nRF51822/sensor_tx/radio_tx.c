@@ -162,6 +162,7 @@ void RADIO_IRQHandler(){
     //stop HFCLK
     nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTOP);
 
+    //reset event
     NRF_RADIO->EVENTS_DISABLED = 0;
     rtc_schedule_next_event();
     g_radio_active = 0;

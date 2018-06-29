@@ -32,3 +32,11 @@ void put_uint32(payload_struct_t *payload, uint32_t value){
   memcpy(&payload->data[payload->size], &value, sizeof(value));
   payload->size += sizeof(value);
 }
+
+void put_uint8_array(payload_struct_t *payload, uint8_t* data, size_t len){
+if(payload->size+len > MAX_RADIO_PAYLOAD_SIZE)  {
+    return;
+  }
+  memcpy(&payload->data[payload->size], data, len);
+  payload->size += len; 
+}

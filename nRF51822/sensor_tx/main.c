@@ -25,9 +25,11 @@
 //hardware config
 #include "board_config.h"
 
-//rtc timer
+//leds
 #include "leds.h"
 
+//debug output pin
+#include "debug_pin.h"
 
 //rtc timer
 #include "rtc.h"
@@ -185,10 +187,16 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
   put_uint8(payload, SENSOR_WAKEUP);
   put_uint8(payload, wake_up_counter);      */
   put_uint8(payload, SENSOR_TYPE_WAKEUP);//well-known sensor type
-  put_uint8(payload, ctx->wake_up_counter);
+  put_uint8(payload, ctx->wake_up_counter & 0xFF);
 
   put_uint8(payload, SENSOR_TYPE_DEBUG);//well-known sensor type
-  put_uint8(payload, ctx->one_wire);
+  put_uint8(payload, ctx->one_wire_error);  
+  
+  if(ctx->one_wire_error==0){
+    put_uint8(payload, SENSOR_TYPE_DS18B20);
+    put_uint8_array(payload, ctx->onewire_rom, 8);
+    put_uint16(payload, 0);
+  }
   return 0;
 }
 
@@ -208,6 +216,8 @@ int main(void)
 
   led_pin_init();
 
+  debug_pin_init();
+
   onewire_init();
 
   //use LOWPWR (default value)
@@ -219,8 +229,7 @@ int main(void)
   main_context_t ctx = {0};
     
   led_on(BOARD_CONFIG_LED_PIN_0);
-  nrf_delay_ms(250);
-  ctx.one_wire = onewire_reset();
+  nrf_delay_ms(250);  
   led_off(BOARD_CONFIG_LED_PIN_0);
 
 
@@ -242,15 +251,25 @@ int main(void)
     ctx.wake_up_counter++;
 
     //check wake-up reason
-    if(adc_is_adc_wakeup()){
-      adc_reset_wakeup_marker();
+    if(!adc_is_adc_wakeup()){
+      continue;//
+    }
+    int real_len = 0;
+    rc = onewire_read_result(ctx.onewire_rom, 8, &real_len);
+    if(rc==ONE_WIRE_ERROR_BUSY){
+      continue;
+    }
+    ctx.one_wire_error = rc;
+    ctx.real_len = (uint8_t)real_len;
 
-      rc = fill_payload(&payload, &ctx);
-      check_error(rc);
+    adc_reset_wakeup_marker();
+    rc = fill_payload(&payload, &ctx);
+    check_error(rc);
 
-      rc = send_packet((uint8_t*)&payload);
-      check_error(rc);
-    }    
+    rc = send_packet((uint8_t*)&payload);
+    check_error(rc);  
+    //nrf_delay_ms(1000);      
+
   }
 }
 

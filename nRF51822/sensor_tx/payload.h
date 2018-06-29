@@ -11,6 +11,7 @@
 #define SENSOR_TYPE_WAKEUP 0x00
 #define SENSOR_TYPE_BATTERY 0x10
 #define SENSOR_TYPE_DEBUG 0x20
+#define SENSOR_TYPE_DS18B20 0x30
 
 
 #define SENSOR_TYPE_ERRORS 0xB0
@@ -20,6 +21,8 @@
 #define SENSOR_WAKEUP 0
 #define SENSOR_ADC_BATTERY 1
 #define SENSOR_DEBUG 2
+#define SENSOR_DS18B20 3
+
 
 typedef struct payload_struct_s {
   uint8_t size;  
@@ -41,6 +44,8 @@ typedef struct payload_struct_s {
 void payload_clear(payload_struct_t *payload);
 
 void put_uint8(payload_struct_t *payload, uint8_t value);
+
+void put_uint8_array(payload_struct_t *payload, uint8_t* data, size_t len);
 
 void put_uint16(payload_struct_t *payload, uint16_t value);
 

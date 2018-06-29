@@ -17,4 +17,6 @@
 
 #define ONE_WIRE_PIN 7
 
+#define DEBUG_PIN 6
+
 #endif
