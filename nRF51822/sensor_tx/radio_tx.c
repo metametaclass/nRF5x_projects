@@ -19,11 +19,7 @@
 
 #include "board_config.h"
 
-
-#define BOARD_CONFIG_RADIO_CHANNEL 13
-
 #define RADIO_IRQ_PRIORITY 2
-
 
 /*
 // These are set to zero as ShockBurst packets don't have corresponding fields. 

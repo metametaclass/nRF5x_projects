@@ -8,7 +8,9 @@
 //use if leds connected to Vcc
 //#define BOARD_CONFIG_LED_ACTIVE_LOW
 
-#define USE_NRF_EXAMPLE_RF_SETUP
+//#define USE_NRF_EXAMPLE_RF_SETUP
+
+#define BOARD_CONFIG_RADIO_CHANNEL 120
 
 #define BOARD_CONFIG_SEND_INTERVAL 5
 

@@ -14,7 +14,10 @@
 //use nordic radio example compatible setup
 //nRF5_SDK_12.3.0/examples/peripheral/radio/receiver
 
-#define USE_NRF_EXAMPLE_RF_SETUP
+//#define USE_NRF_EXAMPLE_RF_SETUP
+
+#define BOARD_CONFIG_RADIO_CHANNEL 120
+
 
 //30 seconds
 #define BOARD_CONFIG_SEND_INTERVAL 30
