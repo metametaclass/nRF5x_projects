@@ -1,5 +1,9 @@
 #pragma once
 
+#include "board_config.h"
+
+#ifdef BOARD_CONFIG_ONE_WIRE
+
 //onewire_start called before previous poll finished
 #define ONE_WIRE_ERROR_NOT_IDLE 1
 
@@ -37,3 +41,5 @@ void onewire_init();
 void onewire_start();
 
 int onewire_read_result(uint8_t *result, size_t len, int *real_len);
+
+#endif //BOARD_CONFIG_ONE_WIRE

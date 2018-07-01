@@ -8,6 +8,9 @@
 //use if leds connected to Vcc
 #define BOARD_CONFIG_LED_ACTIVE_LOW
 
+//do not blink on wake up
+//#define BOARD_CONFIG_LED_SIGNAL
+
 //use nordic radio example compatible setup
 //nRF5_SDK_12.3.0/examples/peripheral/radio/receiver
 
@@ -16,7 +19,10 @@
 //30 seconds
 #define BOARD_CONFIG_SEND_INTERVAL 30
 
+
+#define BOARD_CONFIG_ONE_WIRE
+
 //1-wire dq pin
-#define BOARD_CONFIG_ONE_WIRE_PIN 16
+#define BOARD_CONFIG_ONE_WIRE_PIN 23
 
 #endif

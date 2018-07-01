@@ -1,3 +1,7 @@
+#include "board_config.h"
+
+#ifdef BOARD_CONFIG_ONE_WIRE
+
 #include "nrf.h"
 
 #include "nrf_gpio.h"
@@ -5,8 +9,6 @@
 #include "stdbool.h"
 
 #include "ow.h"
-
-#include "board_config.h"
 
 //debug output pin
 #include "debug_pin.h"
@@ -452,3 +454,5 @@ int onewire_read_result(uint8_t *result, size_t len, int *real_len){
   return ONE_WIRE_ERROR_BUSY;
   
 }
+
+#endif

@@ -11,3 +11,4 @@ typedef struct main_context_s {
 	uint8_t packet_counter;  	
   	uint8_t onewire_rom[ONEWIRE_RESULT_SIZE];
 } main_context_t;
+

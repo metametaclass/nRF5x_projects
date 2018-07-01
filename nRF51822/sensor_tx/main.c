@@ -37,8 +37,10 @@
 //battery measurement
 #include "adc.h"
 
+#ifdef BOARD_CONFIG_ONE_WIRE
 //1-wire 
 #include "ow.h"
+#endif
 
 //error codes
 #include "nrfs_errors.h"
@@ -197,6 +199,7 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
   //put_uint8(payload, SENSOR_TYPE_DEBUG);//well-known sensor type
   //put_uint8(payload, ctx->one_wire_error);  
 
+#ifdef BOARD_CONFIG_ONE_WIRE
   if(ctx->one_wire_error!=0){
     errors[2*error_count] = SENSOR_ID_DS18B20;
     errors[2*error_count+1] = ctx->one_wire_error;
@@ -211,6 +214,8 @@ int fill_payload(payload_struct_t *payload, main_context_t *ctx){
     //put_uint8(payload, SENSOR_TYPE_BYTE_ARRAY | 6);
     //put_uint8_array(payload, ctx->onewire_rom+8, 6);
   }
+#endif
+
   if (error_count>0) {
     //type:B, count:error_count 
     put_uint8(payload, SENSOR_TYPE_ERRORS | error_count); 
@@ -240,7 +245,9 @@ int main(void)
 
   debug_pin_init();
 
+#ifdef BOARD_CONFIG_ONE_WIRE
   onewire_init();
+#endif
 
   //use LOWPWR (default value)
   //NRF_POWER->TASKS_CONSTLAT = 1;
@@ -280,6 +287,8 @@ int main(void)
     if(!adc_is_adc_wakeup()){
       continue;//
     }
+
+#ifdef BOARD_CONFIG_ONE_WIRE
     int real_len = 0;
     rc = onewire_read_result(ctx.onewire_rom, sizeof(ctx.onewire_rom), &real_len);
     if(rc==ONE_WIRE_ERROR_BUSY){
@@ -287,6 +296,8 @@ int main(void)
     }
     ctx.one_wire_error = rc;
     ctx.real_len = (uint8_t)real_len;
+#else
+#endif    
 
     adc_reset_wakeup_marker();
     rc = fill_payload(&payload, &ctx);
