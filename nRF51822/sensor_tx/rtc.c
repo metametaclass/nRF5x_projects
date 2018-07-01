@@ -46,6 +46,11 @@ void rtc_init(){
   //nrf_rtc_int_enable(NRF_RTC0, /*NRF_RTC_INT_TICK_MASK |*/ NRF_RTC_INT_COMPARE0_MASK); 
 
   nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_START);
+
+  //first start in 1 second
+  uint32_t val = nrf_rtc_counter_get(NRF_RTC0);
+  val = RTC_WRAP((val + RTC_TICK_PER_SECOND));
+  nrf_rtc_cc_set(NRF_RTC0, 0, val);
   
 }
 
