@@ -17,6 +17,6 @@
 #define BOARD_CONFIG_SEND_INTERVAL 30
 
 //1-wire dq pin
-#define ONE_WIRE_PIN 16
+#define BOARD_CONFIG_ONE_WIRE_PIN 16
 
 #endif
