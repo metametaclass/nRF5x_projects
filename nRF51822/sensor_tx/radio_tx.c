@@ -107,7 +107,7 @@ static void radio_address_config_sensor_tx(){
 
 void radio_initialization() {
 
-  NRF_RADIO->TXPOWER   = (RADIO_TXPOWER_TXPOWER_0dBm << RADIO_TXPOWER_TXPOWER_Pos);  
+  NRF_RADIO->TXPOWER   = (RADIO_TXPOWER_TXPOWER_Pos4dBm << RADIO_TXPOWER_TXPOWER_Pos);  
   NRF_RADIO->MODE      = (RADIO_MODE_MODE_Nrf_1Mbit << RADIO_MODE_MODE_Pos);
 
 #ifdef USE_NRF_EXAMPLE_RF_SETUP
