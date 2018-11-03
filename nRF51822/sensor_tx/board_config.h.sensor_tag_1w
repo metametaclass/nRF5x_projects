@@ -1,0 +1,31 @@
+#ifndef BOARD_CONFIG_H
+#define BOARD_CONFIG_H
+
+#define BOARD_CONFIG_LED_PIN_0 19
+#define BOARD_CONFIG_LED_PIN_1 18
+#define BOARD_CONFIG_LED_PIN_2 17
+
+//use if leds connected to Vcc
+#define BOARD_CONFIG_LED_ACTIVE_LOW
+
+//do not blink on wake up
+//#define BOARD_CONFIG_LED_SIGNAL
+
+//use nordic radio example compatible setup
+//nRF5_SDK_12.3.0/examples/peripheral/radio/receiver
+
+//#define USE_NRF_EXAMPLE_RF_SETUP
+
+#define BOARD_CONFIG_RADIO_CHANNEL 120
+
+//30 seconds
+#define BOARD_CONFIG_SEND_INTERVAL 30
+
+//no one-wire sensor, for now
+#define BOARD_CONFIG_ONE_WIRE
+
+//1-wire dq pin
+#define BOARD_CONFIG_ONE_WIRE_PIN 29
+
+
+#endif
